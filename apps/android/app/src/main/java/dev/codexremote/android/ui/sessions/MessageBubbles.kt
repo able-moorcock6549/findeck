@@ -9,7 +9,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,13 +21,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +50,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -49,21 +63,30 @@ import kotlinx.coroutines.delay
  * Renders a user's message in a right-aligned bubble.
  * Used both in history rounds and for the current-turn prompt.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun UserMessageBubble(
     text: String,
     timestamp: String? = null,
     dimmed: Boolean = false,
+    onCopy: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val displayText = remember(text) { sanitizePromptDisplay(text) }
+    var showSheet by remember { mutableStateOf(false) }
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.85f),
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = { showSheet = true },
+                ),
             shape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp),
             color = if (dimmed) {
                 MaterialTheme.colorScheme.surfaceVariant
@@ -98,6 +121,38 @@ internal fun UserMessageBubble(
             }
         }
     }
+
+    if (showSheet) {
+        val clipboardManager = LocalClipboardManager.current
+        MessageActionSheet(
+            onDismiss = { showSheet = false },
+            actions = buildList {
+                add(
+                    MessageAction(
+                        label = "复制",
+                        icon = Icons.Filled.ContentCopy,
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(text))
+                            showSheet = false
+                        },
+                    )
+                )
+                onCopy?.let { /* already handled above */ }
+                onEdit?.let { editFn ->
+                    add(
+                        MessageAction(
+                            label = "编辑并重发",
+                            icon = Icons.Filled.Edit,
+                            onClick = {
+                                showSheet = false
+                                editFn()
+                            },
+                        )
+                    )
+                }
+            },
+        )
+    }
 }
 
 // ── AI reply block ────────────────────────────────────────────────
@@ -106,6 +161,7 @@ internal fun UserMessageBubble(
  * The hero composable: shows the AI's response with a primary-color accent bar,
  * rich text blocks, typewriter cursor, and micro-status footer.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun AssistantReplyBlock(
     output: String?,
@@ -120,10 +176,18 @@ internal fun AssistantReplyBlock(
     modifier: Modifier = Modifier,
 ) {
     val accentColor = MaterialTheme.colorScheme.primary
+    var showSheet by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .combinedClickable(
+                onClick = {},
+                onLongClick = {
+                    if (!output.isNullOrBlank()) showSheet = true
+                },
+            )
             .animateContentSize(
                 animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
             ),
@@ -197,6 +261,36 @@ internal fun AssistantReplyBlock(
                     }
                 }
             }
+        }
+
+        if (showSheet) {
+            MessageActionSheet(
+                onDismiss = { showSheet = false },
+                actions = buildList {
+                    add(
+                        MessageAction(
+                            label = "复制回复",
+                            icon = Icons.Filled.ContentCopy,
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(output.orEmpty()))
+                                showSheet = false
+                            },
+                        )
+                    )
+                    onRetry?.let { retryFn ->
+                        add(
+                            MessageAction(
+                                label = "重试本轮",
+                                icon = Icons.Filled.Replay,
+                                onClick = {
+                                    showSheet = false
+                                    retryFn()
+                                },
+                            )
+                        )
+                    }
+                },
+            )
         }
     }
 }
@@ -404,6 +498,60 @@ internal fun WaitingReplyPlaceholder(
         )
         if (!draft) {
             ShimmerBlock(lines = 2)
+        }
+    }
+}
+
+// ── Long-press action sheet ───────────────────────────────────────
+
+internal data class MessageAction(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit,
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun MessageActionSheet(
+    onDismiss: () -> Unit,
+    actions: List<MessageAction>,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+        ) {
+            actions.forEach { action ->
+                Surface(
+                    onClick = action.onClick,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = action.icon,
+                            contentDescription = action.label,
+                            modifier = Modifier.size(22.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = action.label,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
         }
     }
 }

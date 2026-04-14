@@ -3,11 +3,16 @@ package dev.codexremote.android.ui.sessions
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,11 +30,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -55,7 +62,7 @@ import kotlinx.coroutines.isActive
 
 private enum class AttachmentTarget { Composer, Edit }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SessionDetailScreen(
     serverId: String,
@@ -82,6 +89,7 @@ fun SessionDetailScreen(
     var expandedRounds by remember(stableDetailKey) { mutableStateOf(setOf<String>()) }
     var autoFollowLive by remember(stableDetailKey) { mutableStateOf(true) }
     var pendingLiveUpdates by remember(stableDetailKey) { mutableStateOf(0) }
+    var showDevDiagnostics by remember { mutableStateOf(false) }
     var previousLiveStatus by remember(stableDetailKey) { mutableStateOf<String?>(null) }
     var refreshedTerminalRunId by remember(stableDetailKey) { mutableStateOf<String?>(null) }
     var attachmentTarget by remember(stableDetailKey) { mutableStateOf(AttachmentTarget.Composer) }
@@ -242,7 +250,12 @@ fun SessionDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
+                    Column(
+                        modifier = Modifier.combinedClickable(
+                            onClick = {},
+                            onLongClick = { showDevDiagnostics = true },
+                        ),
+                    ) {
                         Text(
                             text = session?.title ?: detailProjectLabel(initialCwd),
                             maxLines = 1,
@@ -423,9 +436,39 @@ fun SessionDetailScreen(
             }
         }
     }
-}
 
-// ── Lightweight supporting composables ────────────────────────────
+    // Dev diagnostics bottom sheet (long-press TopAppBar title)
+    if (showDevDiagnostics) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showDevDiagnostics = false },
+            sheetState = sheetState,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "开发者诊断",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                DiagnosticRow("Session ID", sessionId ?: "(draft)")
+                DiagnosticRow("Server", serverId)
+                DiagnosticRow("Host", hostId)
+                DiagnosticRow("SSE 连接", if (uiState.liveStreamConnected) "已连接" else "未连接")
+                DiagnosticRow("SSE 状态", uiState.liveStreamStatus ?: "—")
+                DiagnosticRow("Run ID", uiState.liveRun?.id ?: "—")
+                DiagnosticRow("Run 状态", uiState.liveRun?.status ?: "—")
+                DiagnosticRow("模型", uiState.liveRun?.model ?: "—")
+                DiagnosticRow("消息数", "${uiState.messages.size}")
+                DiagnosticRow("输出长度", "${uiState.liveRun?.lastOutput?.length ?: 0} chars")
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
 
 @Composable
 private fun ErrorBanner(
@@ -496,5 +539,30 @@ private fun ErrorState(
                 }
             }
         }
+    }
+}
+
+// ── Developer diagnostics helper ──────────────────────────────────
+
+@Composable
+private fun DiagnosticRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth(0.6f),
+        )
     }
 }

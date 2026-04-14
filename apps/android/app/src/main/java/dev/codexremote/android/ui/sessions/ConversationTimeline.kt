@@ -81,7 +81,11 @@ internal fun ConversationTimeline(
         ) {
             // ① History rounds (only past rounds, not the current turn)
             if (historicalRounds.isNotEmpty()) {
-                items(historicalRounds, key = { it.id }) { round ->
+                items(
+                    historicalRounds,
+                    key = { it.id },
+                    contentType = { "history-round" },
+                ) { round ->
                     HistoryRoundItem(
                         round = round,
                         expanded = expandedRounds.contains(round.id),
