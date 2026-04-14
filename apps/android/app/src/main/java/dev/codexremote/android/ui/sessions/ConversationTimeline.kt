@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.codexremote.android.data.model.Run
-import dev.codexremote.android.data.model.SessionMessage
 
 /**
  * The conversation timeline — a chat-like LazyColumn that displays:
@@ -69,6 +68,10 @@ internal fun ConversationTimeline(
         else -> latestAssistantReply ?: cleanedOutput
     }
 
+    // Only show historical rounds in the history section;
+    // the current (non-historical) round is rendered separately below.
+    val historicalRounds = historyRounds.filter { it.isHistorical }
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
@@ -76,9 +79,9 @@ internal fun ConversationTimeline(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // ① History rounds
-            if (historyRounds.isNotEmpty()) {
-                items(historyRounds, key = { it.id }) { round ->
+            // ① History rounds (only past rounds, not the current turn)
+            if (historicalRounds.isNotEmpty()) {
+                items(historicalRounds, key = { it.id }) { round ->
                     HistoryRoundItem(
                         round = round,
                         expanded = expandedRounds.contains(round.id),
