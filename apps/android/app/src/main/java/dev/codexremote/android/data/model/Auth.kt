@@ -14,3 +14,15 @@ data class LoginResponse(
     val token: String,
     val expiresAt: String,
 )
+
+@Serializable
+data class ChangePasswordRequest(
+    val currentPassword: String,
+    val newPassword: String,
+)
+
+@Serializable
+data class ChangePasswordResponse(
+    val ok: Boolean,
+    val restartScheduled: Boolean,
+)

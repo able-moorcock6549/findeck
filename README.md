@@ -24,16 +24,22 @@ English:
 - Web 构建和测试通过
 - Android Debug APK 可正常编译
 - Android 会话列表支持项目文件夹隐藏与自定义拖拽排序
+- Android 会话详情已升级为原生 Compose 详情页，支持流式回复、历史折叠、附件队列与设置入口
+- Android 端支持在应用内修改服务密码，并在服务端重启后自动重新对齐连接
 - 继续已有会话时，服务端会先恢复 thread 再启动 turn，避免旧会话落回只读权限
 - Inbox 已改为 staging 模式，远端只落盘到 `data/submissions/`
+- launchd 已改为通过 `~/Library/Application Support/CodexRemote/launchd/` 下的 launcher 启动，避免直接依赖仓库目录权限
 
 English:
 - Server builds and tests are passing
 - Web builds and tests are passing
 - Android debug APK builds successfully
 - Android session lists now support hiding project folders and custom drag reordering
+- Android session detail is now a native Compose experience with streaming replies, folded history, attachment queueing, and an in-app settings entry
+- Android can now change the service password in-app and automatically re-align the connection after the server restarts
 - Resumed sessions now restore the thread before starting a turn so existing sessions do not fall back to read-only permissions
 - Inbox now uses a staging model and stores submissions under `data/submissions/`
+- launchd now starts from launcher scripts under `~/Library/Application Support/CodexRemote/launchd/` instead of relying directly on the repo path
 
 ## Repository Layout / 仓库结构
 

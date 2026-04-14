@@ -21,6 +21,8 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,20 +38,82 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.codexremote.android.data.model.Server
+import dev.codexremote.android.data.network.ApiClient
 import dev.codexremote.android.data.repository.ServerRepository
 import dev.codexremote.android.ui.theme.ThemePreference
 import dev.codexremote.android.ui.theme.ThemeToggleAction
 import dev.codexremote.android.ui.theme.CodexOnline
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class ServerConnectionUiState(
+    val checking: Boolean = false,
+    val reachable: Boolean = false,
+    val degraded: Boolean = false,
+    val summary: String = "尚未检查连接",
+)
 
 class ServerListViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = ServerRepository(application)
     val servers = repo.servers
+
+    private val _connectionStates = MutableStateFlow<Map<String, ServerConnectionUiState>>(emptyMap())
+    val connectionStates = _connectionStates.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repo.servers.collectLatest { servers ->
+                _connectionStates.value = servers.associate { server ->
+                    server.id to ServerConnectionUiState(checking = true, summary = "检查连接中…")
+                }
+                servers.forEach { server ->
+                    refreshServer(server)
+                }
+            }
+        }
+    }
+
+    fun refreshServer(server: Server) {
+        _connectionStates.update { states ->
+            states + (server.id to ServerConnectionUiState(checking = true, summary = "检查连接中…"))
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val state = try {
+                val client = ApiClient(server.baseUrl)
+                try {
+                    val health = client.validateConnection()
+                    ServerConnectionUiState(
+                        checking = false,
+                        reachable = health.ok,
+                        degraded = health.degraded,
+                        summary = health.summary,
+                    )
+                } finally {
+                    client.close()
+                }
+            } catch (error: Exception) {
+                ServerConnectionUiState(
+                    checking = false,
+                    reachable = false,
+                    degraded = false,
+                    summary = ApiClient.describeNetworkFailure(error),
+                )
+            }
+
+            _connectionStates.update { states -> states + (server.id to state) }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +127,7 @@ fun ServerListScreen(
     viewModel: ServerListViewModel = viewModel(),
 ) {
     val servers by viewModel.servers.collectAsState(initial = emptyList())
+    val connectionStates by viewModel.connectionStates.collectAsState()
 
     Scaffold(
         topBar = {
@@ -119,6 +184,7 @@ fun ServerListScreen(
                 items(servers, key = { it.id }) { server ->
                     ServerCard(
                         server = server,
+                        connectionState = connectionStates[server.id],
                         onTap = {
                             if (server.token != null) {
                                 onServerAuthenticated(server.id)
@@ -127,6 +193,7 @@ fun ServerListScreen(
                             }
                         },
                         onLogin = { onSelectServer(server.id) },
+                        onRefresh = { viewModel.refreshServer(server) },
                     )
                 }
             }
@@ -137,8 +204,10 @@ fun ServerListScreen(
 @Composable
 private fun ServerCard(
     server: Server,
+    connectionState: ServerConnectionUiState?,
     onTap: () -> Unit,
     onLogin: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -172,20 +241,49 @@ private fun ServerCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-            }
-            if (server.token != null) {
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "已登录",
-                    tint = CodexOnline,
-                    modifier = Modifier.size(20.dp),
+                Text(
+                    text = connectionState?.summary ?: "尚未检查连接",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = when {
+                        connectionState?.checking == true -> MaterialTheme.colorScheme.primary
+                        connectionState?.reachable == true && connectionState?.degraded == true ->
+                            MaterialTheme.colorScheme.tertiary
+                        connectionState?.reachable == true -> CodexOnline
+                        else -> MaterialTheme.colorScheme.error
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            } else {
-                IconButton(onClick = onLogin) {
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onRefresh) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Login,
-                        contentDescription = "登录",
+                        imageVector = Icons.Filled.Sync,
+                        contentDescription = "重新检查连接",
                     )
+                }
+                if (server.token != null) {
+                    Icon(
+                        imageVector = if (connectionState?.reachable == false) {
+                            Icons.Filled.ErrorOutline
+                        } else {
+                            Icons.Filled.CheckCircle
+                        },
+                        contentDescription = if (connectionState?.reachable == false) "连接异常" else "已登录",
+                        tint = if (connectionState?.reachable == false) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            CodexOnline
+                        },
+                        modifier = Modifier.size(20.dp),
+                    )
+                } else {
+                    IconButton(onClick = onLogin) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Login,
+                            contentDescription = "登录",
+                        )
+                    }
                 }
             }
         }

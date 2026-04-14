@@ -127,6 +127,13 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
         return if (resolved.isBlank() || resolved == "连接失败，请稍后重试") fallback else resolved
     }
 
+    private fun isTransientTimeout(error: Throwable): Boolean {
+        val message = ApiClient.describeNetworkFailure(error)
+        return message.contains("超时") ||
+            (error.message?.contains("request_timeout", ignoreCase = true) == true) ||
+            (error.message?.contains("Request timeout has expired", ignoreCase = true) == true)
+    }
+
     private suspend fun resolveServer(serverId: String): ServerHandle {
         val servers = repo.servers.first()
         val server = servers.find { it.id == serverId }
@@ -153,12 +160,17 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
             try {
                 refreshSessionAndLive(serverId, sessionId)
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        error = userFacingMessage(e, "加载会话失败"),
-                        session = it.session,
-                        messages = it.messages,
-                    )
+                val existingState = _uiState.value
+                if (isTransientTimeout(e) && (existingState.session != null || existingState.messages.isNotEmpty())) {
+                    _uiState.update { it.copy(session = it.session, messages = it.messages) }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            error = userFacingMessage(e, "加载会话失败"),
+                            session = it.session,
+                            messages = it.messages,
+                        )
+                    }
                 }
             } finally {
                 _uiState.update { it.copy(loading = false, refreshing = false) }
@@ -182,7 +194,10 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
                 val isActivelyStreaming = _uiState.value.let { s ->
                     s.liveRun?.status in activeRunStatuses || s.liveStreamConnected
                 }
-                if (!isActivelyStreaming) {
+                val hasVisibleContent = _uiState.value.let { s ->
+                    s.session != null || s.messages.isNotEmpty() || !s.liveRun?.lastOutput.isNullOrBlank()
+                }
+                if (!isActivelyStreaming && !(hasVisibleContent && isTransientTimeout(e))) {
                     _uiState.update { it.copy(error = userFacingMessage(e, "刷新会话失败")) }
                 }
             } finally {

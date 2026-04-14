@@ -18,6 +18,7 @@ data class Server(
     val baseUrl: String,
     val webUrl: String? = null,
     val token: String? = null,
+    val appPassword: String? = null,
 ) {
     /** Resolved web origin — falls back to [baseUrl] for single-origin deployments. */
     val effectiveWebUrl: String get() = webUrl?.takeIf { it.isNotBlank() } ?: baseUrl

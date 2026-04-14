@@ -5,6 +5,8 @@ import dev.codexremote.android.data.model.ArchiveSessionsResponse
 import dev.codexremote.android.data.model.Artifact
 import dev.codexremote.android.data.model.SessionDetailResponse
 import dev.codexremote.android.data.model.ListInboxResponse
+import dev.codexremote.android.data.model.ChangePasswordRequest
+import dev.codexremote.android.data.model.ChangePasswordResponse
 import dev.codexremote.android.data.model.LoginRequest
 import dev.codexremote.android.data.model.LoginResponse
 import dev.codexremote.android.data.model.InboxItem
@@ -20,6 +22,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
@@ -35,9 +38,25 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.job
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.URI
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 
 /**
  * Lightweight HTTP client for the CodexRemote backend.
@@ -46,7 +65,47 @@ import kotlinx.serialization.json.jsonPrimitive
  * no caching, no retry. The [baseUrl] points at the Fastify server
  * (e.g. "http://100.x.y.z:3000").
  */
-class ApiClient(private val baseUrl: String) {
+data class ConnectionCheckResult(
+    val ok: Boolean,
+    val normalizedBaseUrl: String,
+    val summary: String,
+    val detail: String? = null,
+    val degraded: Boolean = false,
+)
+
+sealed interface LiveRunStreamEvent {
+    data class Connected(
+        val resumedFromEventId: Long?,
+    ) : LiveRunStreamEvent
+
+    data class RunSnapshot(
+        val run: Run?,
+        val eventId: Long?,
+    ) : LiveRunStreamEvent
+
+    data class Gap(
+        val missedFrom: Long,
+        val currentSeq: Long,
+    ) : LiveRunStreamEvent
+
+    data class StreamEnd(
+        val reason: String,
+    ) : LiveRunStreamEvent
+
+    data class IdleTimeout(
+        val timeoutMs: Long,
+    ) : LiveRunStreamEvent
+
+    data class Reconnecting(
+        val attempt: Int,
+        val delayMs: Long,
+        val message: String,
+    ) : LiveRunStreamEvent
+}
+
+class ApiClient(baseUrl: String) {
+    val baseUrl: String = normalizeBaseUrl(baseUrl)
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -56,6 +115,11 @@ class ApiClient(private val baseUrl: String) {
         install(ContentNegotiation) {
             json(json)
         }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30_000
+            connectTimeoutMillis = 5_000
+            socketTimeoutMillis = 30_000
+        }
     }
 
     private suspend inline fun <reified T> decodeResponse(response: HttpResponse): T {
@@ -63,6 +127,13 @@ class ApiClient(private val baseUrl: String) {
         if (!response.status.isSuccess()) {
             if (response.status.value == 401) {
                 throw UnauthorizedException(extractErrorMessage(body, response.status.value))
+            }
+            if (response.status.value == 429) {
+                val retryAfter = response.headers["retry-after"]?.toIntOrNull()
+                throw RateLimitException(
+                    message = extractErrorMessage(body, response.status.value),
+                    retryAfterSec = retryAfter,
+                )
             }
             throw IllegalStateException(extractErrorMessage(body, response.status.value))
         }
@@ -84,20 +155,77 @@ class ApiClient(private val baseUrl: String) {
     // ── Auth ────────────────────────────────────────────────────────────
 
     suspend fun login(password: String, deviceLabel: String? = "android"): LoginResponse {
-        return http.post("$baseUrl/api/auth/login") {
+        val response = http.post("$baseUrl/api/auth/login") {
             contentType(ContentType.Application.Json)
             setBody(LoginRequest(password = password, deviceLabel = deviceLabel))
-        }.body()
+        }
+        return decodeResponse(response)
     }
 
-    suspend fun checkHealth(): Boolean {
+    suspend fun changePassword(
+        token: String,
+        currentPassword: String,
+        newPassword: String,
+    ): ChangePasswordResponse {
+        val response = http.post("$baseUrl/api/auth/password") {
+            bearerAuth(token)
+            contentType(ContentType.Application.Json)
+            setBody(
+                ChangePasswordRequest(
+                    currentPassword = currentPassword,
+                    newPassword = newPassword,
+                )
+            )
+        }
+        return decodeResponse(response)
+    }
+
+    suspend fun validateConnection(): ConnectionCheckResult {
         return try {
             val response = http.get("$baseUrl/api/health")
-            response.status.value == 200
-        } catch (_: Exception) {
-            false
+            val body = response.bodyAsText()
+
+            if (!response.status.isSuccess()) {
+                val summary = when (response.status.value) {
+                    404 -> "当前地址可访问，但它不是 CodexRemote API"
+                    401, 403 -> "API 地址可访问，但当前请求被拒绝"
+                    else -> extractErrorMessage(body, response.status.value)
+                }
+                val detail = when (response.status.value) {
+                    404 -> "请确认填写的是后端 API 地址（默认 31807），而不是 Web 地址。"
+                    else -> null
+                }
+                return ConnectionCheckResult(
+                    ok = false,
+                    normalizedBaseUrl = baseUrl,
+                    summary = summary,
+                    detail = detail,
+                )
+            }
+
+            val payload = runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull()
+            val status = payload?.get("status")?.jsonPrimitive?.contentOrNull
+            val checks = payload?.get("checks")?.let { element ->
+                runCatching { element.jsonObject }.getOrNull()
+            }
+            val degraded = status == "degraded"
+            ConnectionCheckResult(
+                ok = true,
+                normalizedBaseUrl = baseUrl,
+                summary = if (degraded) "API 可连接，但服务当前处于 degraded 状态" else "已连接到 CodexRemote API",
+                detail = checks?.let(::summarizeHealthChecks),
+                degraded = degraded,
+            )
+        } catch (error: Exception) {
+            ConnectionCheckResult(
+                ok = false,
+                normalizedBaseUrl = baseUrl,
+                summary = describeNetworkFailure(error),
+            )
         }
     }
+
+    suspend fun checkHealth(): Boolean = validateConnection().ok
 
     // ── Sessions ────────────────────────────────────────────────────────
 
@@ -212,6 +340,159 @@ class ApiClient(private val baseUrl: String) {
         return http.post("$baseUrl/api/hosts/$hostId/sessions/${encode(sessionId)}/live/stop") {
             bearerAuth(token)
         }.body()
+    }
+
+    fun streamLiveRun(
+        token: String,
+        hostId: String,
+        sessionId: String,
+        initialLastEventId: Long? = null,
+    ): Flow<LiveRunStreamEvent> = flow {
+        var lastEventId = initialLastEventId
+        var reconnectDelayMs = SSE_RECONNECT_BASE_MS
+        var attempt = 0
+
+        while (true) {
+            currentCoroutineContext().ensureActive()
+
+            val request = Request.Builder()
+                .url("$baseUrl/api/hosts/$hostId/sessions/${encode(sessionId)}/live/stream")
+                .header("Accept", "text/event-stream")
+                .header("Authorization", "Bearer $token")
+                .apply {
+                    if (lastEventId != null) {
+                        header("Last-Event-ID", lastEventId.toString())
+                    }
+                }
+                .build()
+
+            val call = STREAM_HTTP.newCall(request)
+            val cancellationHandle = currentCoroutineContext().job.invokeOnCompletion {
+                call.cancel()
+            }
+
+            try {
+                call.execute().use { response ->
+                    if (!response.isSuccessful) {
+                        val errorBody = response.body?.string().orEmpty()
+                        val message = extractErrorMessage(errorBody, response.code)
+                        when (response.code) {
+                            401 -> throw UnauthorizedException(message)
+                            404 -> throw IllegalStateException(message)
+                            else -> throw IllegalStateException(message)
+                        }
+                    }
+
+                    val body = response.body
+                        ?: throw IllegalStateException("SSE 响应体为空")
+
+                    emit(LiveRunStreamEvent.Connected(lastEventId))
+                    attempt = 0
+                    reconnectDelayMs = SSE_RECONNECT_BASE_MS
+
+                    val pendingData = mutableListOf<String>()
+                    var currentEvent: String? = null
+                    var currentId: Long? = null
+                    val streamContext = currentCoroutineContext()
+
+                    fun resetFrame() {
+                        pendingData.clear()
+                        currentEvent = null
+                        currentId = null
+                    }
+
+                    suspend fun parseFrame() {
+                        val eventName = currentEvent ?: "message"
+                        val eventData = pendingData.joinToString("\n")
+                        if (currentId != null) {
+                            lastEventId = currentId
+                        }
+                        when (eventName) {
+                            "run" -> {
+                                val run = json.decodeFromString<Run?>(eventData)
+                                emit(LiveRunStreamEvent.RunSnapshot(run = run, eventId = currentId))
+                            }
+                            "gap" -> {
+                                val payload = json.decodeFromString<GapPayload>(eventData)
+                                emit(
+                                    LiveRunStreamEvent.Gap(
+                                        missedFrom = payload.missedFrom,
+                                        currentSeq = payload.currentSeq,
+                                    )
+                                )
+                            }
+                            "stream-end" -> {
+                                val payload = json.decodeFromString<StreamEndPayload>(eventData)
+                                emit(LiveRunStreamEvent.StreamEnd(payload.reason))
+                            }
+                            "idle-timeout" -> {
+                                val payload = json.decodeFromString<IdleTimeoutPayload>(eventData)
+                                emit(LiveRunStreamEvent.IdleTimeout(payload.timeoutMs))
+                            }
+                        }
+                    }
+
+                    body.charStream().buffered().use { reader ->
+                        while (true) {
+                            streamContext.ensureActive()
+                            val rawLine = reader.readLine() ?: break
+                            when {
+                                rawLine.isEmpty() -> {
+                                    if (pendingData.isNotEmpty() || currentEvent != null || currentId != null) {
+                                        parseFrame()
+                                    }
+                                    resetFrame()
+                                }
+                                rawLine.startsWith(":") -> Unit
+                                rawLine.startsWith("event:") -> currentEvent = rawLine.substringAfter(':').trimStart()
+                                rawLine.startsWith("data:") -> pendingData += rawLine.substringAfter(':').trimStart()
+                                rawLine.startsWith("id:") -> {
+                                    currentId = rawLine.substringAfter(':').trim().toLongOrNull()
+                                }
+                            }
+                        }
+                        if (pendingData.isNotEmpty() || currentEvent != null || currentId != null) {
+                            parseFrame()
+                        }
+                    }
+                }
+            } catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
+                attempt += 1
+                val message = describeNetworkFailure(error)
+                val permanent = error is UnauthorizedException ||
+                    (error is IllegalStateException && (error.message?.contains("not found") == true))
+                if (permanent || attempt >= SSE_MAX_CONSECUTIVE_ERRORS) {
+                    throw error
+                }
+                emit(
+                    LiveRunStreamEvent.Reconnecting(
+                        attempt = attempt,
+                        delayMs = reconnectDelayMs,
+                        message = message,
+                    )
+                )
+                delay(reconnectDelayMs)
+                reconnectDelayMs = (reconnectDelayMs * 2).coerceAtMost(SSE_RECONNECT_MAX_MS)
+                continue
+            } finally {
+                cancellationHandle.dispose()
+            }
+
+            attempt += 1
+            if (attempt >= SSE_MAX_CONSECUTIVE_ERRORS) {
+                throw IllegalStateException("实时流已多次断开，请下拉刷新后重试")
+            }
+            emit(
+                LiveRunStreamEvent.Reconnecting(
+                    attempt = attempt,
+                    delayMs = reconnectDelayMs,
+                    message = "实时连接已断开，正在重连…",
+                )
+            )
+            delay(reconnectDelayMs)
+            reconnectDelayMs = (reconnectDelayMs * 2).coerceAtMost(SSE_RECONNECT_MAX_MS)
+        }
     }
 
     // ── Inbox ───────────────────────────────────────────────────────────
@@ -381,8 +662,140 @@ class ApiClient(private val baseUrl: String) {
 
     private fun encode(value: String): String =
         java.net.URLEncoder.encode(value, Charsets.UTF_8.name())
+
+    companion object {
+        private const val SSE_RECONNECT_BASE_MS = 1_000L
+        private const val SSE_RECONNECT_MAX_MS = 15_000L
+        private const val SSE_MAX_CONSECUTIVE_ERRORS = 3
+        private val STREAM_HTTP: OkHttpClient = OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+
+        fun normalizeBaseUrl(rawValue: String): String {
+            return normalizeServerUrl(rawValue, stripApiPath = true)
+        }
+
+        fun normalizeWebUrl(rawValue: String): String {
+            return normalizeServerUrl(rawValue, stripApiPath = false)
+        }
+
+        private fun normalizeServerUrl(
+            rawValue: String,
+            stripApiPath: Boolean,
+        ): String {
+            val trimmed = rawValue.trim()
+            require(trimmed.isNotBlank()) { "请输入服务器地址" }
+
+            val withScheme = if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+                trimmed
+            } else {
+                "http://$trimmed"
+            }
+
+            val uri = try {
+                URI(withScheme)
+            } catch (_: Exception) {
+                throw IllegalArgumentException("服务器地址格式不正确")
+            }
+
+            val scheme = uri.scheme?.lowercase()
+            require(scheme == "http" || scheme == "https") {
+                "服务器地址只支持 http 或 https"
+            }
+            require(!uri.host.isNullOrBlank()) { "服务器地址缺少主机名或 IP" }
+
+            val rawPath = uri.path.orEmpty().trim()
+            val normalizedPath = when {
+                rawPath.isBlank() || rawPath == "/" -> ""
+                stripApiPath && (rawPath == "/api" || rawPath.startsWith("/api/")) -> ""
+                else -> rawPath.trimEnd('/')
+            }
+
+            return buildString {
+                append(scheme)
+                append("://")
+                append(uri.host)
+                if (uri.port != -1) {
+                    append(":")
+                    append(uri.port)
+                }
+                if (normalizedPath.isNotBlank()) {
+                    append(normalizedPath)
+                }
+            }
+        }
+
+        fun describeNetworkFailure(error: Throwable): String {
+            return when (val root = unwrapNetworkCause(error)) {
+                is UnknownHostException -> "找不到这台服务器，请检查 IP、域名或局域网连接"
+                is ConnectException -> "服务器没有响应，请确认后端已启动且端口可访问"
+                is SocketTimeoutException -> "连接服务器超时，请稍后重试"
+                is SSLException -> "HTTPS 握手失败，请检查证书或先改用 http 地址"
+                is IllegalArgumentException -> root.message ?: "服务器地址格式不正确"
+                is UnauthorizedException -> root.message
+                is RateLimitException -> buildString {
+                    append("登录尝试过于频繁，请稍后再试")
+                    root.retryAfterSec?.takeIf { it > 0 }?.let {
+                        append("（约 $it 秒后）")
+                    }
+                }
+                else -> root.message ?: "连接失败，请稍后重试"
+            }
+        }
+
+        private fun unwrapNetworkCause(error: Throwable): Throwable {
+            var current: Throwable = error
+            while (current.cause != null && current.cause !== current) {
+                current = current.cause!!
+            }
+            return current
+        }
+
+        private fun summarizeHealthChecks(checks: JsonObject): String? {
+            val highlights = buildList {
+                val database = checks["database"]?.jsonPrimitive?.contentOrNull
+                if (database != null && database != "ok") add("数据库异常")
+
+                val runs = checks["runs"]?.let { runCatching { it.jsonObject }.getOrNull() }
+                val stale = runs?.get("stale")?.jsonPrimitive?.contentOrNull
+                if (stale != null && stale != "0") add("存在卡住的运行")
+
+                val disk = checks["disk"]?.let { runCatching { it.jsonObject }.getOrNull() }
+                val diskLow = disk?.get("low")?.jsonPrimitive?.contentOrNull
+                if (diskLow == "true") add("磁盘空间偏低")
+
+                val dbWriteErrors = checks["dbWriteErrors"]?.jsonPrimitive?.contentOrNull
+                if (dbWriteErrors != null && dbWriteErrors != "0") add("最近有数据库写入错误")
+            }
+
+            return highlights.takeIf { it.isNotEmpty() }?.joinToString("，")
+        }
+    }
 }
 
 class UnauthorizedException(
     override val message: String = "登录已失效，请重新登录",
 ) : IllegalStateException(message)
+
+class RateLimitException(
+    override val message: String = "登录尝试过于频繁，请稍后再试",
+    val retryAfterSec: Int? = null,
+) : IllegalStateException(message)
+
+@kotlinx.serialization.Serializable
+private data class GapPayload(
+    val missedFrom: Long,
+    val currentSeq: Long,
+)
+
+@kotlinx.serialization.Serializable
+private data class StreamEndPayload(
+    val reason: String,
+)
+
+@kotlinx.serialization.Serializable
+private data class IdleTimeoutPayload(
+    val timeoutMs: Long,
+)

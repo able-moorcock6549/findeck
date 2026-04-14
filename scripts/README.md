@@ -10,6 +10,7 @@ English: Operational helper scripts for local development and deployment.
 - `codexremote-server.sh`: start the built Fastify server using `.env.local`
 - `codexremote-web.sh`: start the built web app
 - `clear-inbox.sh`: remove inbox records from SQLite and delete matching staging directories
+- `publish-android-apk.sh`: build the Android debug APK, rename it into a dated `CodexRemote` APK artifact, and copy it to the configured SMB share
 
 ## Environment / 环境变量
 

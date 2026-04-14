@@ -18,16 +18,18 @@ English: Native Android client for CodexRemote.
 - 服务器列表与添加服务器
 - 登录
 - 会话列表
-- 会话详情
+- 原生会话详情
 - Inbox 投递与最近记录
+- 设置（修改当前服务密码）
 
 English:
 - Splash
 - Server list and add-server flow
 - Login
 - Session list
-- Session detail
+- Native session detail
 - Inbox submit flow and recent history
+- Settings (change the current service password)
 
 ## Build / 构建
 
@@ -51,7 +53,7 @@ English: If `ANDROID_HOME` is already configured, you can skip `local.properties
 
 English:
 - `baseUrl`: Fastify API origin
-- `webUrl`: optional web UI origin used by the session-detail WebView
+- `webUrl`: optional web UI origin kept for compatibility; the main session-detail experience is now native Compose
 
 ## Inbox Behavior / Inbox 行为
 

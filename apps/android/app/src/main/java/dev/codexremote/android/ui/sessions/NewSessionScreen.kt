@@ -62,6 +62,11 @@ class NewSessionViewModel(application: Application) : AndroidViewModel(applicati
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private fun userFacingMessage(error: Throwable, fallback: String): String {
+        val resolved = ApiClient.describeNetworkFailure(error)
+        return if (resolved.isBlank() || resolved == "连接失败，请稍后重试") fallback else resolved
+    }
+
     suspend fun load(serverId: String, path: String? = null) {
         _loading.value = true
         _error.value = null
@@ -71,10 +76,13 @@ class NewSessionViewModel(application: Application) : AndroidViewModel(applicati
                 ?: throw IllegalStateException("服务器不存在")
             val token = server.token ?: throw IllegalStateException("尚未登录")
             val client = ApiClient(server.baseUrl)
-            _browser.value = client.browseProjects(token, HOST_ID, path)
-            client.close()
+            try {
+                _browser.value = client.browseProjects(token, HOST_ID, path)
+            } finally {
+                client.close()
+            }
         } catch (e: Exception) {
-            _error.value = e.message ?: "读取目录失败"
+            _error.value = userFacingMessage(e, "读取目录失败")
         } finally {
             _loading.value = false
         }

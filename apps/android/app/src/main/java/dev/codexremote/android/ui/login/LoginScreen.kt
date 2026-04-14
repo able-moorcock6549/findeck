@@ -48,6 +48,16 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
 
+    private val _savedPassword = MutableStateFlow<String?>(null)
+    val savedPassword = _savedPassword.asStateFlow()
+
+    fun loadSavedPassword(serverId: String) {
+        viewModelScope.launch {
+            val servers = repo.servers.first()
+            _savedPassword.value = servers.find { it.id == serverId }?.appPassword
+        }
+    }
+
     fun login(
         serverId: String,
         password: String,
@@ -62,13 +72,31 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     ?: throw IllegalStateException("服务器不存在")
 
                 val client = ApiClient(server.baseUrl)
-                val response = client.login(password, deviceLabel = "android")
-                client.close()
-
-                repo.updateToken(serverId, response.token)
-                onSuccess()
+                try {
+                    val health = client.validateConnection()
+                    if (!health.ok) {
+                        throw IllegalStateException(
+                            buildString {
+                                append(health.summary)
+                                health.detail?.let {
+                                    append('\n')
+                                    append(it)
+                                }
+                            }
+                        )
+                    }
+                    val response = client.login(password, deviceLabel = "android")
+                    repo.updateCredentials(
+                        serverId = serverId,
+                        token = response.token,
+                        appPassword = password,
+                    )
+                    onSuccess()
+                } finally {
+                    client.close()
+                }
             } catch (e: Exception) {
-                onError(e.message ?: "登录失败")
+                onError(ApiClient.describeNetworkFailure(e))
             } finally {
                 _loading.value = false
             }
@@ -86,8 +114,19 @@ fun LoginScreen(
 ) {
     var password by remember { mutableStateOf("") }
     val loading by viewModel.loading.collectAsState()
+    val savedPassword by viewModel.savedPassword.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    androidx.compose.runtime.LaunchedEffect(serverId) {
+        viewModel.loadSavedPassword(serverId)
+    }
+
+    androidx.compose.runtime.LaunchedEffect(savedPassword) {
+        if (password.isBlank() && !savedPassword.isNullOrBlank()) {
+            password = savedPassword.orEmpty()
+        }
+    }
 
     Scaffold(
         topBar = {

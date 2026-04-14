@@ -211,6 +211,7 @@ fun SessionDetailScreen(
     LaunchedEffect(serverId, sessionId, uiState.liveStreamConnected, uiState.liveRun?.status) {
         if (sessionId.isNullOrBlank()) return@LaunchedEffect
         if (uiState.liveStreamConnected) return@LaunchedEffect
+        if (uiState.liveStreamStatus == "正在连接原生实时流…") return@LaunchedEffect
 
         while (isActive && !uiState.liveStreamConnected) {
             viewModel.refreshLiveRun(serverId, sessionId)
@@ -402,9 +403,16 @@ fun SessionDetailScreen(
                         }
                     }
 
-                    // Error banner — hide during active streaming (errors are likely
-                    // transient polling/timeout blips, not user-actionable failures)
-                    if (uiState.error != null && !(isRunning && uiState.liveStreamConnected)) {
+                    // Error banner — hide timeout-style blips whenever usable content is already visible.
+                    val hasVisibleConversation = session != null || uiState.messages.isNotEmpty() || !cleanedOutput.isNullOrBlank()
+                    val isTimeoutStyleError = uiState.error?.contains("timeout", ignoreCase = true) == true
+                        || uiState.error?.contains("超时") == true
+
+                    if (
+                        uiState.error != null &&
+                        !(isRunning && uiState.liveStreamConnected) &&
+                        !(hasVisibleConversation && isTimeoutStyleError)
+                    ) {
                         ErrorBanner(
                             message = uiState.error!!,
                             onDismiss = { viewModel.clearError() },

@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,13 +35,19 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -179,6 +188,12 @@ private fun SessionFolderSortOrder.label(): String = when (this) {
     SessionFolderSortOrder.CUSTOM -> "自定义排序"
 }
 
+private fun ThemePreference.menuLabel(): String = when (this) {
+    ThemePreference.AUTO -> "主题：自动"
+    ThemePreference.LIGHT -> "主题：日间"
+    ThemePreference.DARK -> "主题：夜间"
+}
+
 private fun <T> MutableList<T>.move(fromIndex: Int, toIndex: Int) {
     if (fromIndex == toIndex) return
     add(toIndex, removeAt(fromIndex))
@@ -213,6 +228,27 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _customFolderOrder = MutableStateFlow<List<String>>(emptyList())
     val customFolderOrder = _customFolderOrder.asStateFlow()
+
+    private fun userFacingMessage(error: Throwable, fallback: String): String {
+        val resolved = ApiClient.describeNetworkFailure(error)
+        return if (resolved.isBlank() || resolved == "连接失败，请稍后重试") fallback else resolved
+    }
+
+    private suspend inline fun <T> withServerClient(
+        serverId: String,
+        crossinline block: suspend (ApiClient, String) -> T,
+    ): T {
+        val servers = repo.servers.first()
+        val server = servers.find { it.id == serverId }
+            ?: throw IllegalStateException("服务器不存在")
+        val token = server.token ?: throw IllegalStateException("尚未登录")
+        val client = ApiClient(server.baseUrl)
+        return try {
+            block(client, token)
+        } finally {
+            client.close()
+        }
+    }
 
     fun initialize(serverId: String) {
         viewModelScope.launch {
@@ -288,21 +324,16 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
         _loading.value = true
         _error.value = null
         try {
-            val servers = repo.servers.first()
-            val server = servers.find { it.id == serverId }
-                ?: throw IllegalStateException("服务器不存在")
-            val token = server.token ?: throw IllegalStateException("尚未登录")
-
-            val client = ApiClient(server.baseUrl)
-            val response = client.listSessions(token, hostId = "local")
-            client.close()
+            val response = withServerClient(serverId) { client, token ->
+                client.listSessions(token, hostId = "local")
+            }
             _sessions.value = response.sessions
         } catch (e: UnauthorizedException) {
             repo.updateToken(serverId, null)
             _authExpired.value = true
             _error.value = e.message ?: "登录已失效，请重新登录"
         } catch (e: Exception) {
-            _error.value = e.message ?: "加载会话失败"
+            _error.value = userFacingMessage(e, "加载会话失败")
         } finally {
             _loading.value = false
         }
@@ -313,17 +344,12 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
             _loading.value = true
             _error.value = null
             try {
-                val servers = repo.servers.first()
-                val server = servers.find { it.id == serverId }
-                    ?: throw IllegalStateException("服务器不存在")
-                val token = server.token ?: throw IllegalStateException("尚未登录")
-
-                val client = ApiClient(server.baseUrl)
-                client.renameSession(token, hostId = "local", sessionId = sessionId, title = title)
-                client.close()
+                withServerClient(serverId) { client, token ->
+                    client.renameSession(token, hostId = "local", sessionId = sessionId, title = title)
+                }
                 refreshSessions(serverId)
             } catch (e: Exception) {
-                _error.value = e.message ?: "重命名会话失败"
+                _error.value = userFacingMessage(e, "重命名会话失败")
             } finally {
                 _loading.value = false
             }
@@ -335,17 +361,12 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
             _loading.value = true
             _error.value = null
             try {
-                val servers = repo.servers.first()
-                val server = servers.find { it.id == serverId }
-                    ?: throw IllegalStateException("服务器不存在")
-                val token = server.token ?: throw IllegalStateException("尚未登录")
-
-                val client = ApiClient(server.baseUrl)
-                client.archiveSessions(token, hostId = "local", sessionIds = sessionIds)
-                client.close()
+                withServerClient(serverId) { client, token ->
+                    client.archiveSessions(token, hostId = "local", sessionIds = sessionIds)
+                }
                 refreshSessions(serverId)
             } catch (e: Exception) {
-                _error.value = e.message ?: "归档会话失败"
+                _error.value = userFacingMessage(e, "归档会话失败")
             } finally {
                 _loading.value = false
             }
@@ -368,6 +389,7 @@ fun SessionListScreen(
     onToggleTheme: () -> Unit,
     onSelectSession: (hostId: String, sessionId: String) -> Unit,
     onOpenInbox: () -> Unit,
+    onOpenSettings: () -> Unit,
     onNewProject: () -> Unit,
     onNewThread: (cwd: String?) -> Unit,
     onAuthExpired: () -> Unit,
@@ -402,6 +424,7 @@ fun SessionListScreen(
     var renameText by remember { mutableStateOf("") }
     var selectedSessionIds by remember { mutableStateOf(setOf<String>()) }
     var duplicateProjectPath by remember { mutableStateOf<String?>(null) }
+    var topMenuExpanded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val dragFolders = remember(serverId) { mutableStateListOf<ProjectFolder>() }
     var orderDirty by remember { mutableStateOf(false) }
@@ -445,7 +468,24 @@ fun SessionListScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(if (selectionMode) "已选择 ${selectedSessionIds.size} 个会话" else "项目文件夹")
+                    Column {
+                        Text(
+                            text = if (selectionMode) "已选择 ${selectedSessionIds.size} 个会话" else "项目文件夹",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = when {
+                                selectionMode -> "可批量重命名或归档"
+                                loading -> "${folders.size} 个项目 · 正在刷新"
+                                else -> "${folders.size} 个项目 · ${sessions.size} 条会话"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -489,14 +529,63 @@ fun SessionListScreen(
                             themePreference = themePreference,
                             onToggle = onToggleTheme,
                         )
-                        IconButton(onClick = onNewProject) {
-                            Icon(Icons.Filled.Add, contentDescription = "新项目")
+                        FilledTonalIconButton(
+                            onClick = onNewProject,
+                            modifier = Modifier.size(52.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = "新项目",
+                                modifier = Modifier.size(24.dp),
+                            )
                         }
-                        IconButton(onClick = onOpenInbox) {
-                            Icon(Icons.Filled.Inbox, contentDescription = "收件箱")
-                        }
-                        IconButton(onClick = { viewModel.loadSessions(serverId) }) {
-                            Icon(Icons.Filled.Refresh, contentDescription = "刷新")
+                        Box {
+                            IconButton(
+                                onClick = { topMenuExpanded = true },
+                                modifier = Modifier.size(52.dp),
+                            ) {
+                                Icon(
+                                    Icons.Filled.Menu,
+                                    contentDescription = "菜单",
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = topMenuExpanded,
+                                onDismissRequest = { topMenuExpanded = false },
+                                modifier = Modifier.widthIn(min = 220.dp),
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("收件箱") },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Inbox, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        topMenuExpanded = false
+                                        onOpenInbox()
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("刷新") },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Refresh, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        topMenuExpanded = false
+                                        viewModel.loadSessions(serverId)
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("设置") },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Settings, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        topMenuExpanded = false
+                                        onOpenSettings()
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -534,6 +623,10 @@ fun SessionListScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TextButton(onClick = { viewModel.loadSessions(serverId) }) {
+                            Text("重新连接")
+                        }
                     }
                 }
             }

@@ -49,23 +49,25 @@ internal fun ConversationTimeline(
     modifier: Modifier = Modifier,
 ) {
     val isActive = liveRun?.status in activeRunStatuses
-    val showAssistantReply = run {
-        val lr = liveRun ?: return@run isDraft
-        if (lr.status in activeRunStatuses) return@run true
-        if (!lr.error.isNullOrBlank()) return@run true
-        latestUserPrompt == null || latestAssistantReply == null
-    }
 
     val currentUserText = when {
-        liveRun == null -> null
+        liveRun == null -> latestUserPrompt
         isActive -> sanitizePromptDisplay(liveRun.prompt)
         else -> latestUserPrompt ?: sanitizePromptDisplay(liveRun.prompt)
     }
 
     val replyOutput = when {
-        liveRun == null -> null
+        liveRun == null -> latestAssistantReply ?: cleanedOutput
         isActive -> cleanedOutput
         else -> latestAssistantReply ?: cleanedOutput
+    }
+
+    val showAssistantReply = when {
+        isDraft -> true
+        !replyOutput.isNullOrBlank() -> true
+        liveRun?.error != null -> true
+        isActive -> true
+        else -> false
     }
 
     // Only show historical rounds in the history section;
@@ -112,22 +114,22 @@ internal fun ConversationTimeline(
             // ③ AI reply (hero block)
             if (showAssistantReply) {
                 item(key = "assistant-reply") {
-                    if (liveRun != null) {
+                    if (replyOutput != null || liveRun != null) {
                         AssistantReplyBlock(
                             output = replyOutput,
                             isActive = isActive,
-                            model = liveRun.model,
-                            startedAt = liveRun.startedAt,
-                            finishedAt = liveRun.finishedAt,
-                            error = liveRun.error,
+                            model = liveRun?.model,
+                            startedAt = liveRun?.startedAt,
+                            finishedAt = liveRun?.finishedAt,
+                            error = liveRun?.error,
                             sending = sending,
-                            onRetry = if (!isActive && liveRun.prompt.isNotBlank()) {
-                                { onRetry(liveRun.prompt) }
+                            onRetry = if (!isActive && !liveRun?.prompt.isNullOrBlank()) {
+                                { onRetry(liveRun!!.prompt) }
                             } else {
                                 null
                             },
-                            onReusePrompt = if (!isActive && liveRun.prompt.isNotBlank()) {
-                                { onReusePrompt(liveRun.prompt) }
+                            onReusePrompt = if (!isActive && !liveRun?.prompt.isNullOrBlank()) {
+                                { onReusePrompt(liveRun!!.prompt) }
                             } else {
                                 null
                             },

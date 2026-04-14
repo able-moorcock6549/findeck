@@ -47,6 +47,13 @@ Inspect services:
 ./scripts/codexremotectl.sh logs
 ```
 
+launchd launchers and logs live under:
+
+- `~/Library/Application Support/CodexRemote/launchd/`
+- `~/Library/Logs/CodexRemote/`
+
+This avoids macOS permission issues caused by pointing launchd directly at scripts and logs inside the repository tree.
+
 ## Inbox cleanup
 
 Recent inbox/import history is backend state. To clear it, you only need to clean

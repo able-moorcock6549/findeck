@@ -133,6 +133,11 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private fun userFacingMessage(error: Throwable, fallback: String): String {
+        val resolved = ApiClient.describeNetworkFailure(error)
+        return if (resolved.isBlank() || resolved == "连接失败，请稍后重试") fallback else resolved
+    }
+
     private suspend fun buildClient(serverId: String): Pair<ApiClient, String> {
         val servers = repo.servers.first()
         val server = servers.find { it.id == serverId }
@@ -147,11 +152,14 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
             _error.value = null
             try {
                 val (client, token) = buildClient(serverId)
-                val response = client.listInbox(token, HOST_ID)
-                client.close()
+                val response = try {
+                    client.listInbox(token, HOST_ID)
+                } finally {
+                    client.close()
+                }
                 _items.value = response.items
             } catch (e: Exception) {
-                _error.value = e.message ?: "加载收件箱失败"
+                _error.value = userFacingMessage(e, "加载收件箱失败")
             } finally {
                 _loading.value = false
             }
@@ -170,19 +178,22 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
             _submitting.value = true
             try {
                 val (client, token) = buildClient(serverId)
-                val item = client.submitInboxLink(
-                    token = token,
-                    hostId = HOST_ID,
-                    url = url,
-                    title = title.ifBlank { null },
-                    note = note.ifBlank { null },
-                    source = "android",
-                )
-                client.close()
+                val item = try {
+                    client.submitInboxLink(
+                        token = token,
+                        hostId = HOST_ID,
+                        url = url,
+                        title = title.ifBlank { null },
+                        note = note.ifBlank { null },
+                        source = "android",
+                    )
+                } finally {
+                    client.close()
+                }
                 _items.value = listOf(item) + _items.value
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "提交链接失败")
+                onError(userFacingMessage(e, "提交链接失败"))
             } finally {
                 _submitting.value = false
             }
@@ -209,18 +220,21 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 val (client, token) = buildClient(serverId)
-                val item = client.uploadInboxFiles(
-                    token = token,
-                    hostId = HOST_ID,
-                    files = files,
-                    note = note.ifBlank { null },
-                    source = "android",
-                )
-                client.close()
+                val item = try {
+                    client.uploadInboxFiles(
+                        token = token,
+                        hostId = HOST_ID,
+                        files = files,
+                        note = note.ifBlank { null },
+                        source = "android",
+                    )
+                } finally {
+                    client.close()
+                }
                 _items.value = listOf(item) + _items.value
                 onSuccess(files.size)
             } catch (e: Exception) {
-                onError(e.message ?: "上传文件失败")
+                onError(userFacingMessage(e, "上传文件失败"))
             } finally {
                 _submitting.value = false
             }

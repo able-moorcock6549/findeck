@@ -91,6 +91,26 @@ class ServerRepository(private val context: Context) {
         }
     }
 
+    suspend fun updateCredentials(
+        serverId: String,
+        token: String?,
+        appPassword: String?,
+    ) {
+        context.serverDataStore.edit { prefs ->
+            val current = prefs[SERVERS_KEY]?.let {
+                json.decodeFromString<List<Server>>(it).toMutableList()
+            } ?: mutableListOf()
+            val idx = current.indexOfFirst { it.id == serverId }
+            if (idx >= 0) {
+                current[idx] = current[idx].copy(
+                    token = token,
+                    appPassword = appPassword,
+                )
+                prefs[SERVERS_KEY] = json.encodeToString(current)
+            }
+        }
+    }
+
     suspend fun setThemePreference(preference: ThemePreference) {
         context.serverDataStore.edit { prefs ->
             prefs[THEME_PREFERENCE_KEY] = preference.name

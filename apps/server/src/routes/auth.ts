@@ -1,5 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { spawn } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
+  ChangePasswordRequest,
+  type ChangePasswordResponse,
   LoginRequest,
   type LoginResponse,
   type LogoutResponse,
@@ -11,7 +17,7 @@ import {
   verifyToken,
   revokeToken,
 } from "../auth/store.js";
-import { extractBearerToken } from "../auth/middleware.js";
+import { extractBearerToken, requireAuth } from "../auth/middleware.js";
 import { writeAuditLog } from "../audit/log.js";
 
 export interface AuthRouteOptions {
@@ -162,6 +168,33 @@ export function authRoutes(options: AuthRouteOptions) {
       return reply.send(body);
     });
 
+    app.post("/api/auth/password", {
+      preHandler: requireAuth,
+      handler: async (request, reply) => {
+        const parsed = ChangePasswordRequest.safeParse(request.body);
+        if (!parsed.success) {
+          return reply.status(400).send({ error: "Invalid request body" });
+        }
+
+        const { currentPassword, newPassword } = parsed.data;
+        if (currentPassword !== getAppPassword()) {
+          return reply.status(401).send({ error: "Current password is incorrect" });
+        }
+        if (currentPassword === newPassword) {
+          return reply.status(400).send({ error: "New password must be different" });
+        }
+
+        persistCodexRemotePassword(newPassword);
+        scheduleServerRestart();
+
+        const body: ChangePasswordResponse = {
+          ok: true,
+          restartScheduled: true,
+        };
+        return reply.send(body);
+      },
+    });
+
     // --- GET /api/auth/session ---
     app.get("/api/auth/session", async (request, reply) => {
       const tokenId = extractBearerToken(request);
@@ -183,4 +216,68 @@ export function authRoutes(options: AuthRouteOptions) {
       return reply.send(body);
     });
   };
+}
+
+const REPO_ROOT = resolve(fileURLToPath(new URL("../../../../", import.meta.url)));
+const ENV_FILE = process.env["CODEXREMOTE_ENV_FILE"] || resolve(REPO_ROOT, ".env.local");
+const SERVER_PLIST = resolve(
+  process.env["HOME"] || "",
+  "Library/LaunchAgents/dev.codexremote.server.plist",
+);
+
+function persistCodexRemotePassword(newPassword: string): void {
+  const envDir = dirname(ENV_FILE);
+  mkdirSync(envDir, { recursive: true });
+
+  const existing = existsSync(ENV_FILE) ? readFileSync(ENV_FILE, "utf8") : "";
+  const nextEnv = upsertEnvLine(existing, "CODEXREMOTE_PASSWORD", newPassword);
+  writeFileSync(ENV_FILE, nextEnv, "utf8");
+
+  if (existsSync(SERVER_PLIST)) {
+    try {
+      const updatedPlist = readFileSync(SERVER_PLIST, "utf8").replace(
+        /(<key>CODEXREMOTE_PASSWORD<\/key>\s*<string>)([^<]*)(<\/string>)/,
+        (_, prefix: string, _old: string, suffix: string) =>
+          `${prefix}${escapeXml(newPassword)}${suffix}`,
+      );
+      writeFileSync(SERVER_PLIST, updatedPlist, "utf8");
+    } catch {
+      // .env.local is the primary source; plist update is best-effort.
+    }
+  }
+}
+
+function upsertEnvLine(content: string, key: string, value: string): string {
+  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const line = `${key}="${escaped}"`;
+  const pattern = new RegExp(`^${key}=.*$`, "m");
+  if (pattern.test(content)) {
+    return content.replace(pattern, line);
+  }
+  const trimmed = content.trimEnd();
+  return trimmed + (trimmed.length > 0 ? "\n" : "") + line + "\n";
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function scheduleServerRestart(): void {
+  const uid = typeof process.getuid === "function" ? process.getuid() : 501;
+  const command = [
+    "sleep 1",
+    `launchctl bootout gui/${uid} "${SERVER_PLIST}" >/dev/null 2>&1 || true`,
+    `launchctl bootstrap gui/${uid} "${SERVER_PLIST}"`,
+  ].join(" && ");
+
+  const child = spawn("/bin/zsh", ["-lc", command], {
+    detached: true,
+    stdio: "ignore",
+  });
+  child.unref();
 }

@@ -58,29 +58,35 @@ class AddServerViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             _saving.value = true
             try {
-                val trimmedBase = baseUrl.trimEnd('/')
-                val trimmedWeb = webUrl.trimEnd('/')
+                val normalizedBase = ApiClient.normalizeBaseUrl(baseUrl)
+                val normalizedWeb = webUrl
+                    .trim()
+                    .takeIf { it.isNotBlank() }
+                    ?.let(ApiClient::normalizeWebUrl)
 
-                // Validate API connectivity before saving
-                val client = ApiClient(trimmedBase)
-                val healthy = client.checkHealth()
-                client.close()
-                if (!healthy) {
-                    onError("无法连接到 API 服务：$trimmedBase")
+                val client = ApiClient(normalizedBase)
+                val health = try {
+                    client.validateConnection()
+                } finally {
+                    client.close()
+                }
+                if (!health.ok) {
+                    val detail = health.detail?.let { "\n$it" }.orEmpty()
+                    onError("${health.summary}$detail")
                     return@launch
                 }
 
                 val server = Server(
                     id = UUID.randomUUID().toString(),
-                    label = label.ifBlank { trimmedBase },
-                    baseUrl = trimmedBase,
-                    webUrl = trimmedWeb.ifBlank { null },
+                    label = label.ifBlank { normalizedBase },
+                    baseUrl = health.normalizedBaseUrl,
+                    webUrl = normalizedWeb,
                 )
                 repo.saveServer(server)
                 repo.setActiveServer(server.id)
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "连接失败")
+                onError(ApiClient.describeNetworkFailure(e))
             } finally {
                 _saving.value = false
             }
@@ -126,7 +132,7 @@ fun AddServerScreen(
 
             Text(
                 text = "连接运行在 macOS 上的 CodexRemote 服务。请输入 API 地址，" +
-                    "以及网页界面地址。当前项目固定使用 31807 和 31817 端口。",
+                    "以及网页界面地址。可以直接填 IP:端口，应用会自动补全 http://。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
