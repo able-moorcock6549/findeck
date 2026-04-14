@@ -63,16 +63,17 @@ internal fun detailProjectLabel(path: String?): String = when {
 // ── Typewriter helpers ────────────────────────────────────────────
 
 internal fun typewriterStepSize(remaining: Int): Int = when {
-    remaining > 500 -> 6
-    remaining > 200 -> 3
-    remaining > 50 -> 2
+    remaining > 800 -> 4
+    remaining > 300 -> 2
     else -> 1
 }
 
 internal fun typewriterDelayMs(nextChar: Char): Long = when (nextChar) {
-    '。', '.', '!', '！', '?', '？', '\n' -> 120L
-    '，', ',', '、', ';', '；', ':' -> 60L
-    else -> (12L..24L).random()
+    '。', '.', '!', '！', '?', '？' -> 260L
+    '\n' -> 180L
+    '，', ',', '、', ';', '；', ':' -> 100L
+    ')', '）', '」', '"', '\'', '"' -> 60L
+    else -> (28L..48L).random()
 }
 
 // ── Output cleaning ───────────────────────────────────────────────

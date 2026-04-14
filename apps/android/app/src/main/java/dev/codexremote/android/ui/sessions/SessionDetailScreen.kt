@@ -215,6 +215,8 @@ fun SessionDetailScreen(
         while (isActive && !uiState.liveStreamConnected) {
             viewModel.refreshLiveRun(serverId, sessionId)
             if (uiState.liveRun?.status !in activeRunStatuses) {
+                // Run reached terminal — pull final session data
+                viewModel.refresh(serverId, sessionId)
                 break
             }
             delay(1_500L)
@@ -400,8 +402,9 @@ fun SessionDetailScreen(
                         }
                     }
 
-                    // Error banner
-                    if (uiState.error != null) {
+                    // Error banner — hide during active streaming (errors are likely
+                    // transient polling/timeout blips, not user-actionable failures)
+                    if (uiState.error != null && !(isRunning && uiState.liveStreamConnected)) {
                         ErrorBanner(
                             message = uiState.error!!,
                             onDismiss = { viewModel.clearError() },

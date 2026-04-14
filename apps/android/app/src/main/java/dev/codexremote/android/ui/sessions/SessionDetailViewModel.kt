@@ -177,9 +177,30 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
             try {
                 refreshSessionAndLive(serverId, sessionId)
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = userFacingMessage(e, "刷新会话失败")) }
+                // Suppress timeout/network blips while a run is actively streaming.
+                // Only surface errors when there is no live data to show.
+                val isActivelyStreaming = _uiState.value.let { s ->
+                    s.liveRun?.status in activeRunStatuses || s.liveStreamConnected
+                }
+                if (!isActivelyStreaming) {
+                    _uiState.update { it.copy(error = userFacingMessage(e, "刷新会话失败")) }
+                }
             } finally {
                 _uiState.update { it.copy(refreshing = false) }
+            }
+        }
+    }
+
+    /**
+     * Silently refresh session detail and live run.
+     * Used when SSE signals a run has ended so the page can settle to final state.
+     */
+    private fun silentRefreshSessionAndLive(serverId: String, sessionId: String) {
+        viewModelScope.launch {
+            try {
+                refreshSessionAndLive(serverId, sessionId)
+            } catch (_: Exception) {
+                // Best-effort; the page already has streaming data.
             }
         }
     }
@@ -235,6 +256,7 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
                             }
                             is LiveRunStreamEvent.RunSnapshot -> {
                                 liveStreamLastEventId = event.eventId ?: liveStreamLastEventId
+                                val isTerminal = event.run?.status in terminalRunStatuses
                                 _uiState.update {
                                     it.copy(
                                         liveRun = event.run,
@@ -244,6 +266,10 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
                                             else -> "原生实时流已连接"
                                         },
                                     )
+                                }
+                                // Auto-refresh full session when run reaches terminal state
+                                if (isTerminal) {
+                                    silentRefreshSessionAndLive(serverId, sessionId)
                                 }
                             }
                             is LiveRunStreamEvent.Gap -> {
@@ -264,6 +290,8 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
                                         },
                                     )
                                 }
+                                // Run ended — pull final messages and run state
+                                silentRefreshSessionAndLive(serverId, sessionId)
                             }
                             is LiveRunStreamEvent.IdleTimeout -> {
                                 _uiState.update {
