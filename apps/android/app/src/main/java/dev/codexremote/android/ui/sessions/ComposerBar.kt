@@ -1,8 +1,13 @@
 package dev.codexremote.android.ui.sessions
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -68,7 +74,7 @@ internal data class QueuedPromptItem(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ComposerBar(
-    prompt: String,
+    promptValue: TextFieldValue,
     uploading: Boolean,
     sending: Boolean,
     stopping: Boolean,
@@ -79,7 +85,14 @@ internal fun ComposerBar(
     selectedReasoningEffort: String?,
     attachments: List<ComposerAttachmentItem>,
     queuedPrompts: List<QueuedPromptItem>,
-    onPromptChange: (String) -> Unit,
+    slashCommands: List<ComposerSuggestion>,
+    fileSuggestions: List<ComposerSuggestion>,
+    skillSuggestions: List<ComposerSuggestion>,
+    suggestionFilters: List<ComposerSuggestionFilterOption> = emptyList(),
+    selectedSuggestionFilterId: String? = null,
+    onPromptValueChange: (TextFieldValue) -> Unit,
+    onSuggestionAction: (ComposerSuggestion) -> Boolean,
+    onSuggestionFilterSelect: (String?) -> Unit = {},
     onUploadClick: () -> Unit,
     onGalleryClick: () -> Unit,
     onCameraClick: () -> Unit,
@@ -106,6 +119,40 @@ internal fun ComposerBar(
         sending || isRunning -> MaterialTheme.colorScheme.primary
         queuedPrompts.isNotEmpty() -> MaterialTheme.colorScheme.secondary
         else -> MaterialTheme.colorScheme.tertiary
+    }
+    val promptText = promptValue.text
+    val activeContext = detectComposerTokenContext(
+        text = promptText,
+        cursorPosition = promptValue.selection.end,
+    )
+    val attachmentSuggestions = attachments.map { attachment ->
+        ComposerSuggestion(
+            id = attachment.id,
+            label = "@${attachment.originalName}",
+            insertText = "@${attachment.originalName} ",
+            detail = stringResource(
+                if (attachment.localOnly) {
+                    R.string.composer_suggestion_file_detail_local
+                } else {
+                    R.string.composer_suggestion_file_detail_remote
+                },
+            ),
+            kind = ComposerSuggestionKind.File,
+        )
+    }
+    val mergedFileSuggestions = (fileSuggestions + attachmentSuggestions)
+        .distinctBy { it.insertText }
+    val matchingSuggestions = when (activeContext?.prefix) {
+        '/' -> filterComposerSuggestions(slashCommands, activeContext)
+        '@' -> filterComposerSuggestions(mergedFileSuggestions, activeContext)
+        '$' -> filterComposerSuggestions(skillSuggestions, activeContext)
+        else -> emptyList()
+    }
+    val suggestionTitle = when (activeContext?.prefix) {
+        '/' -> stringResource(R.string.composer_suggestions_command_title)
+        '@' -> stringResource(R.string.composer_suggestions_file_title)
+        '$' -> stringResource(R.string.composer_suggestions_skill_title)
+        else -> null
     }
 
     Column(
@@ -173,8 +220,8 @@ internal fun ComposerBar(
                     ) {
                         Box(modifier = Modifier.fillMaxWidth()) {
                             BasicTextField(
-                                value = prompt,
-                                onValueChange = onPromptChange,
+                                value = promptValue,
+                                onValueChange = onPromptValueChange,
                                 enabled = !sending && !stopping,
                                 minLines = 1,
                                 maxLines = 4,
@@ -186,7 +233,7 @@ internal fun ComposerBar(
                                     .heightIn(min = 38.dp)
                                     .padding(end = 72.dp),
                                 decorationBox = { innerTextField ->
-                                    if (prompt.isBlank()) {
+                                    if (promptText.isBlank()) {
                                         Text(
                                             text = stringResource(
                                                 if (isRunning) {
@@ -207,6 +254,29 @@ internal fun ComposerBar(
                                 color = statusColor,
                                 label = statusLabel,
                                 modifier = Modifier.align(Alignment.TopEnd),
+                            )
+                        }
+
+                        AnimatedVisibility(
+                            visible = matchingSuggestions.isNotEmpty(),
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically(),
+                        ) {
+                            ComposerSuggestionPanel(
+                                title = suggestionTitle.orEmpty(),
+                                hint = stringResource(R.string.composer_suggestions_hint),
+                                suggestions = matchingSuggestions,
+                                filterOptions = if (activeContext?.prefix == '$') suggestionFilters else emptyList(),
+                                selectedFilterId = selectedSuggestionFilterId,
+                                onFilterSelect = if (activeContext?.prefix == '$') onSuggestionFilterSelect else null,
+                                onSuggestionClick = { suggestion ->
+                                    if (onSuggestionAction(suggestion)) {
+                                        return@ComposerSuggestionPanel
+                                    }
+                                    onPromptValueChange(
+                                        replaceComposerSelection(promptValue, suggestion),
+                                    )
+                                },
                             )
                         }
 
@@ -262,7 +332,7 @@ internal fun ComposerBar(
                             if (isRunning) {
                                 CompactActionButton(
                                     onClick = onQueue,
-                                    enabled = prompt.trim().isNotEmpty() && !uploading && !sending,
+                                    enabled = promptText.trim().isNotEmpty() && !uploading && !sending,
                                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                     contentDescription = stringResource(R.string.composer_queue_add_desc),
@@ -297,7 +367,7 @@ internal fun ComposerBar(
                             } else {
                                 CompactActionButton(
                                     onClick = onSend,
-                                    enabled = prompt.trim().isNotEmpty() && !sending && !uploading,
+                                    enabled = promptText.trim().isNotEmpty() && !sending && !uploading,
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary,
                                     contentDescription = sendContentDescription,
@@ -387,7 +457,7 @@ private fun CompactActionButton(
 }
 
 @Composable
-private fun SummaryPill(
+internal fun SummaryPill(
     text: String,
     subtitle: String? = null,
     onClick: (() -> Unit)? = null,

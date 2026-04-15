@@ -9,6 +9,7 @@ SERVER_LABEL="$DOMAIN/dev.codexremote.server"
 WEB_LABEL="$DOMAIN/dev.codexremote.web"
 SERVER_PLIST="$HOME/Library/LaunchAgents/dev.codexremote.server.plist"
 WEB_PLIST="$HOME/Library/LaunchAgents/dev.codexremote.web.plist"
+LOG_DIR="$HOME/Library/Logs/CodexRemote"
 
 usage() {
   echo "Usage: $0 {status|restart|stop|start|logs}"
@@ -38,11 +39,11 @@ case "$1" in
     launchctl bootstrap "$DOMAIN" "$WEB_PLIST"
     ;;
   logs)
-    tail -n 80 "$REPO_ROOT/.run/server.log"
+    tail -n 80 "$LOG_DIR/server.log"
     echo
     echo "----"
     echo
-    tail -n 80 "$REPO_ROOT/.run/web.log"
+    tail -n 80 "$LOG_DIR/web.log"
     ;;
   *)
     usage

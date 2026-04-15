@@ -5,6 +5,8 @@ English: Operational helper scripts for local development and deployment.
 
 ## Included Scripts / 包含脚本
 
+- `codexremote.sh`: unified repo-local entry for startup, status, logs, web launch, and doctor checks
+- `codexremote.sh pair`: create and print a one-time pairing code from the local server
 - `install-launchd.sh`: generate and install launch agents from templates
 - `codexremotectl.sh`: inspect, restart, start, stop, and tail logs
 - `codexremote-server.sh`: start the built Fastify server using `.env.local`

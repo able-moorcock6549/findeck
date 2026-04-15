@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -102,6 +103,7 @@ class AddServerViewModel(application: Application) : AndroidViewModel(applicatio
 fun AddServerScreen(
     onServerAdded: () -> Unit,
     onCancel: () -> Unit,
+    onOpenPairing: () -> Unit,
     viewModel: AddServerViewModel = viewModel(),
 ) {
     var label by remember { mutableStateOf("") }
@@ -143,6 +145,12 @@ fun AddServerScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            TextButton(
+                onClick = onOpenPairing,
+            ) {
+                Text(stringResource(R.string.add_server_pairing_entry))
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

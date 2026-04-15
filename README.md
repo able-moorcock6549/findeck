@@ -23,7 +23,9 @@ English:
 - Server 构建和测试通过
 - Web 构建和测试通过
 - Android Debug APK 可正常编译
-- 本地运维已收敛到 `npm run codexremote -- doctor|up|status|logs|restart|web`
+- 本地运维已收敛到 `npm run codexremote -- doctor|up|pair|status|logs|restart|web`
+- 可通过 `npm run codexremote -- pair` 在本机生成一次性配对码，供 Android 首次接入使用
+- Android 已支持可信主机自动重连、归档会话恢复、轻量 smart composer、设置页运行默认值与更完整的前台反馈
 - Web 与 Android 的首屏入口、项目导航和会话工作区已按 `Precision Console` 方向统一收口
 - Android 会话列表支持项目文件夹隐藏与自定义拖拽排序
 - Web 与 Android 会话详情都已支持更明确的恢复态语义，弱网或后台恢复时会尽量补齐而不是直接报错
@@ -39,7 +41,9 @@ English:
 - Server builds and tests are passing
 - Web builds and tests are passing
 - Android debug APK builds successfully
-- Local operator flows are now unified under `npm run codexremote -- doctor|up|status|logs|restart|web`
+- Local operator flows are now unified under `npm run codexremote -- doctor|up|pair|status|logs|restart|web`
+- `npm run codexremote -- pair` prints a one-time pairing code for Android first-time setup
+- Android now supports trusted-host reconnect, archived-session restore, a lightweight smart composer, runtime defaults in settings, and clearer foreground feedback
 - Web and Android first-use surfaces, project navigation, and session workspaces now follow the `Precision Console` direction more consistently
 - Android session lists now support hiding project folders and custom drag reordering
 - Web and Android session detail now treat degraded transport as a recovery flow, aiming to catch up instead of failing loudly
@@ -121,8 +125,9 @@ English:
 - Architecture / 架构说明: [docs/architecture.md](./docs/architecture.md)
 - Operations / 运维说明: [docs/operations.md](./docs/operations.md)
 - Roadmap / 路线图: [docs/v0.3.0-roadmap.md](./docs/v0.3.0-roadmap.md)
+- Android v0.4.0 acceptance / Android v0.4.0 验收清单: [docs/android-v0.4.0-acceptance-checklist.md](./docs/android-v0.4.0-acceptance-checklist.md)
 - Release checklist / 发布检查单: [docs/release-checklist.md](./docs/release-checklist.md)
-- Release notes / 发布说明: [docs/release-notes-v0.2.1.md](./docs/release-notes-v0.2.1.md)
+- Release notes / 发布说明: [docs/release-notes-v0.4.0.md](./docs/release-notes-v0.4.0.md)
 
 ## Inbox Cleanup / Inbox 清理
 

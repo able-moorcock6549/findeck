@@ -43,6 +43,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,10 +62,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -75,6 +79,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.codexremote.android.R
+import dev.codexremote.android.ui.theme.PrecisionConsoleSnackbarHost
+import dev.codexremote.android.data.model.FileEntry
+import dev.codexremote.android.data.model.SkillEntry
 import dev.codexremote.android.ui.theme.ThemePreference
 import dev.codexremote.android.ui.theme.ThemeToggleAction
 import kotlinx.coroutines.delay
@@ -94,6 +101,13 @@ private fun createCameraCaptureUri(context: Context): Uri {
         "${context.packageName}.fileprovider",
         imageFile,
     )
+}
+
+private fun relativeChildPath(rootPath: String, targetPath: String): String? {
+    val normalizedRoot = rootPath.trimEnd('/')
+    val normalizedTarget = targetPath.trimEnd('/')
+    if (!normalizedTarget.startsWith(normalizedRoot)) return null
+    return normalizedTarget.removePrefix(normalizedRoot).trimStart('/').ifBlank { null }
 }
 
 private fun queuedPromptRuntimeSummary(
@@ -220,12 +234,15 @@ fun SessionDetailScreen(
     themePreference: ThemePreference,
     onToggleTheme: () -> Unit,
     onSessionCreated: (hostId: String, sessionId: String) -> Unit,
+    onOpenNewThread: (cwd: String?) -> Unit,
+    onOpenPairing: () -> Unit,
     onBack: () -> Unit,
     viewModel: SessionDetailViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     val uiState by viewModel.uiState.collectAsState()
     val session = uiState.session
     val topBarState = rememberTopAppBarState()
@@ -251,6 +268,8 @@ fun SessionDetailScreen(
     var showRepoLogSheet by remember(stableDetailKey) { mutableStateOf(false) }
     var wasBackgrounded by remember(stableDetailKey) { mutableStateOf(false) }
     var pendingCameraCaptureUri by remember(stableDetailKey) { mutableStateOf<Uri?>(null) }
+    var transientBannerMessage by remember(stableDetailKey) { mutableStateOf<String?>(null) }
+    var transientBannerTone by remember(stableDetailKey) { mutableStateOf(TimelineNoticeTone.Neutral) }
     val voiceController = remember(stableDetailKey) {
         SessionVoiceInputController(
             context = context.applicationContext,
@@ -298,6 +317,50 @@ fun SessionDetailScreen(
             )
         }
     }
+    val slashCommandSuggestions = listOf(
+        ComposerSuggestion(
+            id = "slash-status",
+            label = "/status",
+            insertText = "/status ",
+            detail = stringResource(R.string.composer_suggestion_status_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+        ComposerSuggestion(
+            id = "slash-archive",
+            label = "/archive",
+            insertText = "/archive ",
+            detail = stringResource(R.string.composer_suggestion_archive_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+        ComposerSuggestion(
+            id = "slash-new",
+            label = "/new",
+            insertText = "/new ",
+            detail = stringResource(R.string.composer_suggestion_new_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+        ComposerSuggestion(
+            id = "slash-pair",
+            label = "/pair",
+            insertText = "/pair ",
+            detail = stringResource(R.string.composer_suggestion_pair_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+        ComposerSuggestion(
+            id = "slash-refresh",
+            label = "/refresh",
+            insertText = "/refresh ",
+            detail = stringResource(R.string.composer_suggestion_refresh_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+        ComposerSuggestion(
+            id = "slash-stop",
+            label = "/stop",
+            insertText = "/stop ",
+            detail = stringResource(R.string.composer_suggestion_stop_detail),
+            kind = ComposerSuggestionKind.Command,
+        ),
+    )
     val queuedPromptItems = remember(uiState.queuedPrompts) {
         uiState.queuedPrompts.map { queuedPrompt ->
             QueuedPromptItem(
@@ -336,6 +399,130 @@ fun SessionDetailScreen(
             )
         }
     }
+    var composerPromptValue by rememberSaveable(stableDetailKey, stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(uiState.prompt))
+    }
+    LaunchedEffect(uiState.prompt) {
+        if (composerPromptValue.text != uiState.prompt) {
+            composerPromptValue = TextFieldValue(
+                text = uiState.prompt,
+                selection = TextRange(uiState.prompt.length),
+            )
+        }
+    }
+    val composerTokenContext = remember(composerPromptValue) {
+        detectComposerTokenContext(
+            text = composerPromptValue.text,
+            cursorPosition = composerPromptValue.selection.end,
+        )
+    }
+    var skillSourceFilter by remember(stableDetailKey) { mutableStateOf<String?>(null) }
+    var dynamicSkillEntries by remember(stableDetailKey) { mutableStateOf<List<SkillEntry>>(emptyList()) }
+    var dynamicFileEntries by remember(stableDetailKey) { mutableStateOf<List<FileEntry>>(emptyList()) }
+    var fileBrowsePath by remember(stableDetailKey) { mutableStateOf<String?>(null) }
+    var fileBrowseParentPath by remember(stableDetailKey) { mutableStateOf<String?>(null) }
+    val skillFilterOptions = listOf(
+        ComposerSuggestionFilterOption(null, stringResource(R.string.composer_suggestions_filter_all)),
+        ComposerSuggestionFilterOption("repo-local", stringResource(R.string.composer_suggestions_filter_repo)),
+        ComposerSuggestionFilterOption("user-home", stringResource(R.string.composer_suggestions_filter_home)),
+    )
+    val skillSuggestions = remember(dynamicSkillEntries) {
+        dynamicSkillEntries.map { skill ->
+            ComposerSuggestion(
+                id = skill.id,
+                label = "\$${skill.name}",
+                insertText = "\$${skill.name} ",
+                detail = buildString {
+                    append(
+                        if (skill.source == "repo-local") {
+                            context.getString(R.string.composer_suggestion_skill_source_repo)
+                        } else {
+                            context.getString(R.string.composer_suggestion_skill_source_home)
+                        },
+                    )
+                    if (skill.description.isNotBlank()) {
+                        append(" · ")
+                        append(skill.description)
+                    }
+                },
+                kind = ComposerSuggestionKind.Skill,
+            )
+        }
+    }
+    val fileSuggestions = remember(dynamicFileEntries, fileBrowseParentPath, context) {
+        buildList {
+            fileBrowseParentPath?.let { parentPath ->
+                add(
+                    ComposerSuggestion(
+                        id = "file-up:$parentPath",
+                        label = "..",
+                        detail = context.getString(R.string.composer_suggestions_file_up),
+                        kind = ComposerSuggestionKind.File,
+                        browsePath = parentPath,
+                    ),
+                )
+            }
+            addAll(dynamicFileEntries.map { entry ->
+                ComposerSuggestion(
+                    id = entry.path,
+                    label = "@${entry.relativePath}",
+                    insertText = "@${entry.relativePath} ",
+                    detail = if (entry.kind == "directory") {
+                        context.getString(R.string.composer_suggestion_file_detail_directory)
+                    } else {
+                        context.getString(R.string.composer_suggestion_file_detail_workspace)
+                    },
+                    kind = ComposerSuggestionKind.File,
+                    browsePath = if (entry.kind == "directory") entry.relativePath else null,
+                )
+            })
+        }
+    }
+    LaunchedEffect(serverId, stableDetailKey, composerTokenContext?.prefix, skillSourceFilter) {
+        if (composerTokenContext?.prefix != '$') return@LaunchedEffect
+        runCatching {
+            viewModel.loadSkillSuggestions(serverId, source = skillSourceFilter)
+        }.onSuccess { skills ->
+            dynamicSkillEntries = skills
+        }
+    }
+    LaunchedEffect(serverId, sessionId, initialCwd, stableDetailKey, composerTokenContext?.prefix, composerTokenContext?.query, fileBrowsePath) {
+        if (composerTokenContext?.prefix != '@') {
+            dynamicFileEntries = emptyList()
+            fileBrowseParentPath = null
+            fileBrowsePath = null
+            return@LaunchedEffect
+        }
+        val query = composerTokenContext?.query?.trim().orEmpty()
+        if (query.isBlank()) {
+            runCatching {
+                viewModel.listFileSuggestions(
+                    serverId = serverId,
+                    sessionId = sessionId,
+                    cwd = initialCwd,
+                    path = fileBrowsePath,
+                )
+            }.onSuccess { response ->
+                dynamicFileEntries = response.entries
+                fileBrowseParentPath = response.parentPath?.let { parent ->
+                    if (parent == response.rootPath) "." else relativeChildPath(response.rootPath, parent)
+                }
+            }
+        } else {
+            runCatching {
+                viewModel.searchFileSuggestions(
+                    serverId = serverId,
+                    query = query,
+                    sessionId = sessionId,
+                    cwd = initialCwd,
+                    limit = 12,
+                )
+            }.onSuccess { results ->
+                dynamicFileEntries = results
+                fileBrowseParentPath = null
+            }
+        }
+    }
     val attachPickedUri: (Uri) -> Unit = { uri ->
         if (sessionId.isNullOrBlank() && attachmentTarget == AttachmentTarget.Composer) {
             viewModel.queueLocalAttachment(uri)
@@ -361,6 +548,15 @@ fun SessionDetailScreen(
             attachPickedUri(captureUri)
         }
     }
+    val externalVoiceLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            voiceController.handleExternalResult(result.data)
+        } else {
+            voiceController.cancel()
+        }
+    }
     val voicePermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -372,7 +568,21 @@ fun SessionDetailScreen(
             viewModel.showError(context.getString(R.string.session_detail_voice_unavailable))
             return@rememberLauncherForActivityResult
         }
-        voiceController.start(context.getString(R.string.session_detail_voice_prompt))
+        if (voiceController.usesExternalRecognizer()) {
+            voiceController.startExternal(context.getString(R.string.session_detail_voice_prompt))
+            runCatching {
+                externalVoiceLauncher.launch(
+                    voiceController.buildRecognitionIntent(
+                        context.getString(R.string.session_detail_voice_prompt),
+                    ),
+                )
+            }.onFailure { _: Throwable ->
+                voiceController.cancel()
+                viewModel.showError(context.getString(R.string.session_detail_voice_unavailable))
+            }
+        } else {
+            voiceController.start(context.getString(R.string.session_detail_voice_prompt))
+        }
     }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -391,7 +601,7 @@ fun SessionDetailScreen(
         if (!sessionId.isNullOrBlank()) {
             viewModel.load(serverId, sessionId)
         } else {
-            viewModel.prepareDraft()
+            viewModel.prepareDraft(serverId)
         }
     }
 
@@ -486,16 +696,30 @@ fun SessionDetailScreen(
     LaunchedEffect(sessionId, uiState.liveRun?.status, uiState.liveRun?.id) {
         if (sessionId.isNullOrBlank()) return@LaunchedEffect
         val status = uiState.liveRun?.status
+        val wasActive = previousLiveStatus in activeRunStatuses
         if (status in activeRunStatuses) {
             refreshedTerminalRunId = null
         } else if (
             status in terminalRunStatuses &&
-            previousLiveStatus in activeRunStatuses &&
+            wasActive &&
             uiState.liveRun?.id != null &&
             refreshedTerminalRunId != uiState.liveRun?.id
         ) {
             refreshedTerminalRunId = uiState.liveRun?.id
             viewModel.refresh(serverId, sessionId)
+        }
+        if (status in terminalRunStatuses && wasActive) {
+            transientBannerMessage = when (status) {
+                "completed" -> context.getString(R.string.session_detail_feedback_run_completed)
+                "failed" -> context.getString(R.string.session_detail_feedback_run_failed)
+                "stopped" -> context.getString(R.string.session_detail_feedback_run_stopped)
+                else -> null
+            }
+            transientBannerTone = when (status) {
+                "failed" -> TimelineNoticeTone.Error
+                "stopped" -> TimelineNoticeTone.Warning
+                else -> TimelineNoticeTone.Neutral
+            }
         }
         previousLiveStatus = status
     }
@@ -506,6 +730,21 @@ fun SessionDetailScreen(
                 delay(3_000L)
                 viewModel.clearRecoveryNotice()
             }
+        }
+    }
+
+    LaunchedEffect(uiState.repoActionSummary) {
+        val summary = uiState.repoActionSummary?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+        transientBannerMessage = summary
+        transientBannerTone = TimelineNoticeTone.Neutral
+        viewModel.dismissRepoActionSummary()
+    }
+
+    LaunchedEffect(transientBannerMessage) {
+        if (transientBannerMessage != null) {
+            delay(8_000L)
+            transientBannerMessage = null
+            transientBannerTone = TimelineNoticeTone.Neutral
         }
     }
 
@@ -553,6 +792,7 @@ fun SessionDetailScreen(
 
     Scaffold(
         modifier = Modifier.nestedScroll(topBarScrollBehavior.nestedScrollConnection),
+        snackbarHost = { PrecisionConsoleSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -685,6 +925,19 @@ fun SessionDetailScreen(
                             message = uiState.recoveryNotice.orEmpty(),
                             footer = stringResource(R.string.session_detail_recovery_footer),
                             tone = TimelineNoticeTone.Neutral,
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = !transientBannerMessage.isNullOrBlank(),
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        TimelineNoticeCard(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            title = stringResource(R.string.session_detail_feedback_title),
+                            message = transientBannerMessage.orEmpty(),
+                            tone = transientBannerTone,
                         )
                     }
 
@@ -821,7 +1074,7 @@ fun SessionDetailScreen(
 
                     // Composer bar (always pinned to bottom)
                     ComposerBar(
-                        prompt = uiState.prompt,
+                        promptValue = composerPromptValue,
                         uploading = uiState.uploading,
                         sending = uiState.sending,
                         stopping = uiState.stopping,
@@ -832,7 +1085,67 @@ fun SessionDetailScreen(
                         selectedReasoningEffort = uiState.selectedReasoningEffort,
                         attachments = composerAttachments,
                         queuedPrompts = queuedPromptItems,
-                        onPromptChange = { viewModel.setPrompt(it) },
+                        slashCommands = slashCommandSuggestions,
+                        fileSuggestions = fileSuggestions,
+                        skillSuggestions = skillSuggestions,
+                        suggestionFilters = skillFilterOptions,
+                        selectedSuggestionFilterId = skillSourceFilter,
+                        onPromptValueChange = { nextValue ->
+                            composerPromptValue = nextValue
+                            viewModel.setPrompt(nextValue.text)
+                        },
+                        onSuggestionAction = { suggestion ->
+                            val slashHandled = when (suggestion.id) {
+                                "slash-status" -> {
+                                    showDevDiagnostics = true
+                                    true
+                                }
+                                "slash-archive" -> {
+                                    if (!sessionId.isNullOrBlank() && session?.archivedAt == null) {
+                                        viewModel.archiveSession(serverId, sessionId)
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                                "slash-pair" -> {
+                                    onOpenPairing()
+                                    true
+                                }
+                                "slash-new" -> {
+                                    onOpenNewThread(session?.cwd ?: initialCwd)
+                                    true
+                                }
+                                "slash-refresh" -> {
+                                    if (!sessionId.isNullOrBlank()) {
+                                        viewModel.refresh(serverId, sessionId)
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                                "slash-stop" -> {
+                                    if (isRunning) {
+                                        viewModel.stopRun(serverId, sessionId)
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                                else -> false
+                            }
+                            if (slashHandled) {
+                                true
+                            } else if (!suggestion.browsePath.isNullOrBlank()) {
+                                fileBrowsePath = suggestion.browsePath
+                                true
+                            } else {
+                                false
+                            }
+                        },
+                        onSuggestionFilterSelect = { selected ->
+                            skillSourceFilter = selected
+                        },
                         onUploadClick = {
                             attachmentTarget = AttachmentTarget.Composer
                             attachmentPicker.launch(arrayOf("*/*"))
@@ -876,14 +1189,28 @@ fun SessionDetailScreen(
                             } else if (!voiceController.isAvailable()) {
                                 viewModel.showError(context.getString(R.string.session_detail_voice_unavailable))
                             } else {
-                                val permissionGranted = ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.RECORD_AUDIO,
-                                ) == PackageManager.PERMISSION_GRANTED
-                                if (permissionGranted) {
-                                    voiceController.start(context.getString(R.string.session_detail_voice_prompt))
+                                if (voiceController.usesExternalRecognizer()) {
+                                    voiceController.startExternal(context.getString(R.string.session_detail_voice_prompt))
+                                    runCatching {
+                                        externalVoiceLauncher.launch(
+                                            voiceController.buildRecognitionIntent(
+                                                context.getString(R.string.session_detail_voice_prompt),
+                                            ),
+                                        )
+                                    }.onFailure { _: Throwable ->
+                                        voiceController.cancel()
+                                        viewModel.showError(context.getString(R.string.session_detail_voice_unavailable))
+                                    }
                                 } else {
-                                    voicePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    val permissionGranted = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.RECORD_AUDIO,
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    if (permissionGranted) {
+                                        voiceController.start(context.getString(R.string.session_detail_voice_prompt))
+                                    } else {
+                                        voicePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
                                 }
                             }
                         },

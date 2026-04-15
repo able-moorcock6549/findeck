@@ -84,6 +84,10 @@
     <string name="session_detail_error_add_attachment">Failed to add attachment</string>
     <string name="session_detail_error_missing_cwd">A project directory is required before creating the session</string>
     <string name="session_detail_error_repo_action">Repo action failed</string>
+    <string name="session_detail_feedback_title">Session update</string>
+    <string name="session_detail_feedback_run_completed">This run completed and the result is synced.</string>
+    <string name="session_detail_feedback_run_failed">This run failed, and the last visible output was kept.</string>
+    <string name="session_detail_feedback_run_stopped">This run was stopped.</string>
     <string name="session_detail_error_create_session">Failed to create the session</string>
     <string name="session_control_refreshing">Refreshing UI</string>
     <string name="session_control_stream_ready">Live connection ready</string>
@@ -105,6 +109,26 @@
     <string name="composer_queue_label">Queue</string>
     <string name="composer_stop_run_desc">Stop run</string>
     <string name="composer_send_label">Send</string>
+    <string name="composer_suggestions_hint">Tap to insert into the current prompt</string>
+    <string name="composer_suggestions_command_title">Commands</string>
+    <string name="composer_suggestions_file_title">Files</string>
+    <string name="composer_suggestions_skill_title">Skills</string>
+    <string name="composer_suggestion_status_detail">Show the current session state</string>
+    <string name="composer_suggestion_archive_detail">Archive this session</string>
+    <string name="composer_suggestion_pair_detail">Open the pairing flow</string>
+    <string name="composer_suggestion_new_detail">Create a new session</string>
+    <string name="composer_suggestion_refresh_detail">Refresh the current session and live state</string>
+    <string name="composer_suggestion_stop_detail">Stop the current run</string>
+    <string name="composer_suggestion_file_detail_local">Local attachment</string>
+    <string name="composer_suggestion_file_detail_remote">Uploaded attachment</string>
+    <string name="composer_suggestion_file_detail_workspace">Workspace file</string>
+    <string name="composer_suggestion_file_detail_directory">Directory, tap to browse deeper</string>
+    <string name="composer_suggestions_file_up">Go up one directory</string>
+    <string name="composer_suggestions_filter_all">All</string>
+    <string name="composer_suggestions_filter_repo">Repo</string>
+    <string name="composer_suggestions_filter_home">Home</string>
+    <string name="composer_suggestion_skill_source_repo">Repo skill</string>
+    <string name="composer_suggestion_skill_source_home">Home skill</string>
     <string name="scroll_to_bottom_new_content">New content</string>
     <string name="scroll_to_bottom_default">Scroll to bottom</string>
 </resources>

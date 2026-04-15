@@ -266,6 +266,8 @@ export function cleanTables(): void {
   )`);
   // Respect FK ordering: children first.
   db.exec("DELETE FROM audit_log");
+  db.exec("DELETE FROM pairing_codes");
+  db.exec("DELETE FROM trusted_clients");
   db.exec("DELETE FROM inbox_items");
   db.exec("DELETE FROM artifacts");
   db.exec("DELETE FROM runs");

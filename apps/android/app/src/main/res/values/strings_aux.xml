@@ -2,6 +2,9 @@
 <resources>
     <string name="content_desc_back">返回</string>
     <string name="content_desc_refresh">刷新</string>
+    <string name="theme_toggle_auto">主题：自动</string>
+    <string name="theme_toggle_dark">主题：夜间</string>
+    <string name="theme_toggle_light">主题：日间</string>
 
     <string name="inbox_screen_title">收件箱</string>
     <string name="inbox_kind_link">链接</string>
@@ -79,4 +82,38 @@
     <string name="server_settings_password_updated_reconnected">密码已更新并重新连接</string>
     <string name="server_settings_password_updated_restarting">密码已更新，服务正在重启，请稍后再试</string>
     <string name="server_settings_current_server_unavailable">当前服务器不可用</string>
+    <string name="server_settings_trust_title">配对与重连</string>
+    <string name="server_settings_trust_message">这里可以查看当前信任状态、切换自动重连，或清除本地信任记录。</string>
+    <string name="server_settings_trust_badge_trusted">已配对</string>
+    <string name="server_settings_trust_badge_unpaired">未配对</string>
+    <string name="server_settings_trust_auto_reconnect">自动重连</string>
+    <string name="server_settings_trust_clear">清除信任</string>
+    <string name="server_settings_trust_enabled">自动重连已开启</string>
+    <string name="server_settings_trust_disabled">自动重连已关闭</string>
+    <string name="server_settings_trust_cleared">已清除信任记录</string>
+    <string name="server_settings_trust_pair_button">去配对</string>
+    <string name="server_settings_appearance_title">外观</string>
+    <string name="server_settings_appearance_message">切换当前设备上的控制台主题，不影响后端或网页端。</string>
+    <string name="server_settings_theme_auto">自动</string>
+    <string name="server_settings_theme_light">浅色</string>
+    <string name="server_settings_theme_dark">深色</string>
+    <string name="server_settings_theme_cycle">切换主题</string>
+    <string name="server_settings_notifications_title">通知</string>
+    <string name="server_settings_notifications_enabled">后台运行完成或需要注意时，可以正常收到系统通知。</string>
+    <string name="server_settings_notifications_disabled">当前设备没有授予通知权限，或系统通知总开关已关闭。</string>
+    <string name="server_settings_notifications_manage">管理系统通知</string>
+    <string name="server_settings_notifications_state_on">已开启</string>
+    <string name="server_settings_notifications_state_off">已关闭</string>
+    <string name="server_settings_runtime_title">运行默认值</string>
+    <string name="server_settings_runtime_message">这里设置的是当前主机的默认模型和思考强度，会在新打开会话时优先带入。</string>
+    <string name="server_settings_runtime_state_label">默认配置</string>
+    <string name="server_settings_runtime_saved">已保存运行默认值</string>
+    <string name="server_settings_runtime_reset">恢复自动默认值</string>
+    <string name="server_settings_password_title">应用密码</string>
+    <string name="server_settings_password_message">修改当前主机的应用密码，并在可能时自动完成重连。</string>
+    <string name="server_settings_password_state_label">密码与重连</string>
+    <string name="server_settings_trust_label_title">信任标签</string>
+    <string name="server_settings_trust_method_title">配对方式</string>
+    <string name="server_settings_trust_paired_at_title">首次配对</string>
+    <string name="server_settings_trust_last_reconnect_title">最近自动重连</string>
 </resources>

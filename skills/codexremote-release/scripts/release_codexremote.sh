@@ -228,7 +228,7 @@ if [[ -z "${STATUS_OUTPUT}" ]]; then
   fail "nothing to release; working tree is clean"
 fi
 
-run_cmd git add README.md apps docs package.json package-lock.json packages skills
+run_cmd git add README.md apps docs package.json package-lock.json packages scripts skills
 run_cmd git commit -m "Release ${TAG}"
 run_cmd git tag "${TAG}"
 

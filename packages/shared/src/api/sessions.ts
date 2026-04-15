@@ -158,6 +158,17 @@ export const ArchiveSessionsResponse = z.object({
 });
 export type ArchiveSessionsResponse = z.infer<typeof ArchiveSessionsResponse>;
 
+export const UnarchiveSessionsRequest = z.object({
+  sessionIds: z.array(z.string().max(MAX_ID_LENGTH)).min(1).max(100),
+});
+export type UnarchiveSessionsRequest = z.infer<typeof UnarchiveSessionsRequest>;
+
+export const UnarchiveSessionsResponse = z.object({
+  ok: z.literal(true),
+  unarchivedCount: z.number().int().nonnegative(),
+});
+export type UnarchiveSessionsResponse = z.infer<typeof UnarchiveSessionsResponse>;
+
 // --- Route params ---
 
 /** GET /api/hosts/:hostId/sessions */

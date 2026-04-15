@@ -2,6 +2,7 @@ package dev.codexremote.android.ui.sessions
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -30,6 +31,7 @@ internal class SessionVoiceInputController(
     private val onTranscript: (String) -> Unit,
     private val onError: (SessionVoiceInputError) -> Unit,
 ) : RecognitionListener {
+    private val packageManager: PackageManager = context.packageManager
     private val recognizer: SpeechRecognizer? =
         if (SpeechRecognizer.isRecognitionAvailable(context)) {
             SpeechRecognizer.createSpeechRecognizer(context).also {
@@ -38,13 +40,51 @@ internal class SessionVoiceInputController(
         } else {
             null
         }
+    private val supportsExternalRecognizer: Boolean =
+        buildRecognitionIntent(prompt = "").resolveActivity(packageManager) != null
 
     private val _uiState = MutableStateFlow(SessionVoiceUiState())
     val uiState: StateFlow<SessionVoiceUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
 
-    fun isAvailable(): Boolean = recognizer != null
+    fun isAvailable(): Boolean = recognizer != null || supportsExternalRecognizer
+
+    fun usesExternalRecognizer(): Boolean = recognizer == null && supportsExternalRecognizer
+
+    fun buildRecognitionIntent(prompt: String): Intent =
+        Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            if (prompt.isNotBlank()) {
+                putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
+            }
+        }
+
+    fun startExternal(prompt: String) {
+        if (!supportsExternalRecognizer) {
+            onError(SessionVoiceInputError.Unavailable)
+            return
+        }
+        timerJob?.cancel()
+        _uiState.value = SessionVoiceUiState(transcribing = true)
+    }
+
+    fun handleExternalResult(data: Intent?) {
+        timerJob?.cancel()
+        val transcript = data
+            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+            ?.trim()
+            .orEmpty()
+        _uiState.value = SessionVoiceUiState()
+        if (transcript.isBlank()) {
+            onError(SessionVoiceInputError.NoMatch)
+        } else {
+            onTranscript(transcript)
+        }
+    }
 
     fun start(prompt: String) {
         val recognizer = recognizer ?: run {
@@ -65,14 +105,7 @@ internal class SessionVoiceInputController(
             }
         }
 
-        recognizer.startListening(
-            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
-                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                putExtra(RecognizerIntent.EXTRA_PROMPT, prompt)
-            },
-        )
+        recognizer.startListening(buildRecognitionIntent(prompt))
     }
 
     fun stop() {

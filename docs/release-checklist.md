@@ -1,12 +1,12 @@
 # Release Checklist
 
-## Release focus for v0.2.1
+## Release focus for v0.4.0
 
-- Android now supports bilingual system-language switching across the main flow
-- Android session detail now recovers more gracefully after lock screen / background pauses
-- Android composer now supports voice input, photo library intake, and camera capture
-- Android can notify when a background run finishes and route back into the matching session
-- Android repo controls now include `pull`, `stash`, and recent commit log in addition to the previous branch / commit / push actions
+- Android now supports one-time pairing plus trusted reconnect
+- Android session navigation now includes archived-session restore and search
+- Android composer now supports lightweight `/`, `@`, and `$` suggestions backed by real file and skill data
+- Android settings now cover appearance, notification state, runtime defaults, and richer trusted-host metadata
+- Android foreground feedback is clearer for run completion, stop, failure, and repo-action success
 
 ## Verified in this workspace
 
@@ -19,15 +19,14 @@
 - `npm run build --workspace @codexremote/web`
 - `cd apps/android && ./gradlew :app:compileDebugKotlin`
 - `cd apps/android && ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ANDROID_SDK_ROOT=/opt/homebrew/share/android-commandlinetools ./gradlew :app:assembleDebug`
+- `cd apps/android && ./gradlew :app:testDebugUnitTest --tests dev.codexremote.android.ui.sessions.ComposerSuggestionsTest`
+- `npm run test --workspace @codexremote/server -- src/__tests__/pairing-store.test.ts src/__tests__/pairing.test.ts src/__tests__/session-archive.test.ts src/__tests__/composer-ux.test.ts`
 - resumed-session manual check: resume an existing thread and verify it can create a file under the project root
-- Android manual check: session detail shows final replies without requiring re-entry after a completed run
-- Android manual check: queued follow-up prompt sends after the active run finishes
-- Android manual check: runtime control chips change the next run's model / reasoning settings
-- Android manual check: repo surface shows branch / dirty-state and repo actions complete successfully when no run is active
-- Android manual check: settings can change the server password, the service restarts, and the app can reconnect with the new password
-- Android manual check: background run completion notification appears and routes back into the right session
-- Android manual check: voice input records, shows the capsule, and writes transcript text back into the composer
-- Android manual check: photo library and camera attachments both enter the current session attachment flow
+- Android manual check: trusted-host pairing succeeds and later cold launch prefers reconnect
+- Android manual check: archived sessions can be viewed, searched, and restored
+- Android manual check: smart composer shows `/`, `@`, and `$` suggestions and inserts the selected token correctly
+- Android manual check: settings can change appearance, notification preferences, runtime defaults, trusted reconnect, and password safely
+- Android manual check: session detail shows clear foreground feedback for repo actions and completed / failed / stopped runs
 
 ## Before publishing to GitHub
 

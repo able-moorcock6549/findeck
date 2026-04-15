@@ -7,6 +7,8 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import dev.codexremote.android.R
 
 @Composable
 fun ThemeToggleAction(
@@ -19,9 +21,9 @@ fun ThemeToggleAction(
         ThemePreference.LIGHT -> Icons.Filled.LightMode
     }
     val label = when (themePreference) {
-        ThemePreference.AUTO -> "主题：自动"
-        ThemePreference.DARK -> "主题：夜间"
-        ThemePreference.LIGHT -> "主题：日间"
+        ThemePreference.AUTO -> stringResource(R.string.theme_toggle_auto)
+        ThemePreference.DARK -> stringResource(R.string.theme_toggle_dark)
+        ThemePreference.LIGHT -> stringResource(R.string.theme_toggle_light)
     }
     IconButton(onClick = onToggle) {
         Icon(icon, contentDescription = label)

@@ -45,6 +45,15 @@ export const MAX_PASSWORD_LENGTH = 1_000;
 /** Maximum characters for a device label (e.g. "Pixel 7 Pro"). */
 export const MAX_DEVICE_LABEL_LENGTH = 200;
 
+/** Maximum characters for a pairing code as entered by a user or scanner. */
+export const MAX_PAIRING_CODE_LENGTH = 32;
+
+/** Maximum characters for a trusted-client secret stored on the phone. */
+export const MAX_TRUSTED_CLIENT_SECRET_LENGTH = 256;
+
+/** Maximum characters for a trusted-client identifier. */
+export const MAX_TRUSTED_CLIENT_ID_LENGTH = 64;
+
 // ── Route parameters & identifiers ─────────────────────────────────
 
 /** Maximum characters for any route-param identifier
@@ -54,6 +63,9 @@ export const MAX_ID_LENGTH = 500;
 /** Maximum characters for an absolute local path or cwd selector. */
 export const MAX_PATH_LENGTH = 2_000;
 export const MAX_SESSION_TITLE_LENGTH = 200;
+
+/** Maximum characters for a file-search query. */
+export const MAX_FILE_SEARCH_QUERY_LENGTH = 500;
 
 // ── Fastify body limit ─────────────────────────────────────────────
 

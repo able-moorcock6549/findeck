@@ -7,6 +7,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dev.codexremote.android.R
 import dev.codexremote.android.data.model.Artifact
+import dev.codexremote.android.data.model.FileEntry
+import dev.codexremote.android.data.model.ListFilesResponse
 import dev.codexremote.android.data.model.RepoActionRequest
 import dev.codexremote.android.data.model.RepoActionResponse
 import dev.codexremote.android.data.model.RepoLogEntry
@@ -15,6 +17,7 @@ import dev.codexremote.android.data.model.RepoStatus
 import dev.codexremote.android.data.model.Session
 import dev.codexremote.android.data.model.SessionDetailResponse
 import dev.codexremote.android.data.model.SessionMessage
+import dev.codexremote.android.data.model.SkillEntry
 import dev.codexremote.android.data.network.ApiClient
 import dev.codexremote.android.data.network.LiveRunStreamEvent
 import dev.codexremote.android.data.repository.ServerRepository
@@ -237,11 +240,31 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    private suspend fun applyStoredRuntimeDefaultsIfNeeded(serverId: String) {
+        val snapshot = _uiState.value
+        if (snapshot.runtimeControlsInitialized) return
+        val defaultModel = repo.getRuntimeDefaultModel(serverId)
+        val defaultReasoning = repo.getRuntimeDefaultReasoningEffort(serverId)
+        if (defaultModel.isNullOrBlank() && defaultReasoning.isNullOrBlank()) return
+        _uiState.update { state ->
+            if (state.runtimeControlsInitialized) {
+                state
+            } else {
+                state.copy(
+                    selectedModel = normalizeRuntimeControl(defaultModel),
+                    selectedReasoningEffort = normalizeRuntimeControl(defaultReasoning),
+                    runtimeControlsInitialized = true,
+                )
+            }
+        }
+    }
+
     fun load(serverId: String, sessionId: String) {
         rememberActiveSession(serverId, sessionId)
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true, error = null, recoveryNotice = null) }
             try {
+                applyStoredRuntimeDefaultsIfNeeded(serverId)
                 refreshSessionAndLive(serverId, sessionId)
             } catch (e: Exception) {
                 val existingState = _uiState.value
@@ -272,7 +295,7 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun prepareDraft() {
+    fun prepareDraft(serverId: String? = null) {
         stopLiveRunStream()
         backgroundMonitorJob?.cancel()
         backgroundMonitorJob = null
@@ -287,6 +310,11 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
             selectedReasoningEffort = snapshot.selectedReasoningEffort,
             runtimeControlsInitialized = snapshot.runtimeControlsInitialized,
         )
+        if (!serverId.isNullOrBlank()) {
+            viewModelScope.launch {
+                applyStoredRuntimeDefaultsIfNeeded(serverId)
+            }
+        }
     }
 
     fun refresh(serverId: String, sessionId: String) {
@@ -630,6 +658,43 @@ class SessionDetailViewModel(application: Application) : AndroidViewModel(applic
 
     fun showError(message: String) {
         _uiState.update { it.copy(error = message) }
+    }
+
+    suspend fun loadSkillSuggestions(serverId: String, source: String? = null): List<SkillEntry> =
+        withServerClient(serverId) { handle ->
+            handle.client.listSkills(handle.token, source = source).skills
+        }
+
+    suspend fun searchFileSuggestions(
+        serverId: String,
+        query: String,
+        sessionId: String?,
+        cwd: String?,
+        limit: Int = 12,
+    ): List<FileEntry> = withServerClient(serverId) { handle ->
+        handle.client.searchFiles(
+            token = handle.token,
+            hostId = SESSION_HOST_ID,
+            query = query,
+            sessionId = sessionId,
+            cwd = if (sessionId.isNullOrBlank()) cwd else null,
+            limit = limit,
+        ).results
+    }
+
+    suspend fun listFileSuggestions(
+        serverId: String,
+        sessionId: String?,
+        cwd: String?,
+        path: String? = null,
+    ): ListFilesResponse = withServerClient(serverId) { handle ->
+        handle.client.listFiles(
+            token = handle.token,
+            hostId = SESSION_HOST_ID,
+            sessionId = sessionId,
+            cwd = if (sessionId.isNullOrBlank()) cwd else null,
+            path = path,
+        )
     }
 
     fun onAppBackgrounded() {

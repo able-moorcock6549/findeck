@@ -18,6 +18,13 @@ npm run codexremote -- up
 ```
 
 The unified helper will build missing production artifacts before installing or refreshing the local launchd services on macOS.
+If you need to pair a phone, run `npm run codexremote -- pair` after the local server is up to print a fresh one-time pairing code.
+
+Pairing contract:
+
+- `POST /api/pairing/code` is local-only and generates a short-lived, one-time code.
+- `POST /api/pairing/claim` consumes that code and returns `token`, `expiresAt`, and `trustedClient.clientId/clientSecret`.
+- `POST /api/auth/reconnect` accepts the persisted `clientId/clientSecret` pair and mints a fresh auth token without reusing the pairing code.
 
 Development:
 
@@ -44,6 +51,7 @@ npm run codexremote -- <command>
 Supported commands:
 
 - `up`
+- `pair`
 - `status`
 - `logs`
 - `restart`
@@ -56,6 +64,7 @@ Examples:
 npm run codexremote -- status
 npm run codexremote -- logs
 npm run codexremote -- web
+npm run codexremote -- pair
 ```
 
 ## launchd

@@ -2,6 +2,7 @@ package dev.codexremote.android.data.network
 
 import dev.codexremote.android.data.model.ListSessionsResponse
 import dev.codexremote.android.data.model.ArchiveSessionsResponse
+import dev.codexremote.android.data.model.UnarchiveSessionsResponse
 import dev.codexremote.android.data.model.Artifact
 import dev.codexremote.android.data.model.SessionDetailResponse
 import dev.codexremote.android.data.model.ListInboxResponse
@@ -9,10 +10,15 @@ import dev.codexremote.android.data.model.ChangePasswordRequest
 import dev.codexremote.android.data.model.ChangePasswordResponse
 import dev.codexremote.android.data.model.LoginRequest
 import dev.codexremote.android.data.model.LoginResponse
+import dev.codexremote.android.data.model.PairingClaimRequest
+import dev.codexremote.android.data.model.PairingClaimResponse
 import dev.codexremote.android.data.model.InboxItem
 import dev.codexremote.android.data.model.BrowseProjectsResponse
+import dev.codexremote.android.data.model.ListFilesResponse
+import dev.codexremote.android.data.model.ListSkillsResponse
 import dev.codexremote.android.data.model.CreateSessionRequest
 import dev.codexremote.android.data.model.CreateSessionResponse
+import dev.codexremote.android.data.model.SearchFilesResponse
 import dev.codexremote.android.data.model.RepoActionRequest
 import dev.codexremote.android.data.model.RepoActionResponse
 import dev.codexremote.android.data.model.RepoLogResponse
@@ -21,6 +27,8 @@ import dev.codexremote.android.data.model.StartLiveRunRequest
 import dev.codexremote.android.data.model.StartLiveRunResponse
 import dev.codexremote.android.data.model.StopLiveRunResponse
 import dev.codexremote.android.data.model.SubmitInboxLinkRequest
+import dev.codexremote.android.data.model.TrustedReconnectRequest
+import dev.codexremote.android.data.model.TrustedReconnectResponse
 import dev.codexremote.android.data.model.Run
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -166,6 +174,40 @@ class ApiClient(baseUrl: String) {
         return decodeResponse(response)
     }
 
+    suspend fun claimPairingCode(
+        pairingCode: String,
+        deviceLabel: String? = "android",
+    ): PairingClaimResponse {
+        val response = http.post("$baseUrl/api/pairing/claim") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                PairingClaimRequest(
+                    code = pairingCode,
+                    deviceLabel = deviceLabel,
+                )
+            )
+        }
+        return decodeResponse(response)
+    }
+
+    suspend fun reconnectTrustedClient(
+        clientId: String,
+        clientSecret: String,
+        deviceLabel: String? = "android",
+    ): TrustedReconnectResponse {
+        val response = http.post("$baseUrl/api/auth/reconnect") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                TrustedReconnectRequest(
+                    clientId = clientId,
+                    clientSecret = clientSecret,
+                    deviceLabel = deviceLabel,
+                )
+            )
+        }
+        return decodeResponse(response)
+    }
+
     suspend fun changePassword(
         token: String,
         currentPassword: String,
@@ -235,6 +277,13 @@ class ApiClient(baseUrl: String) {
 
     suspend fun listSessions(token: String, hostId: String): ListSessionsResponse {
         val response = http.get("$baseUrl/api/hosts/$hostId/sessions") {
+            bearerAuth(token)
+        }
+        return decodeResponse(response)
+    }
+
+    suspend fun listArchivedSessions(token: String, hostId: String): ListSessionsResponse {
+        val response = http.get("$baseUrl/api/hosts/$hostId/sessions/archived") {
             bearerAuth(token)
         }
         return decodeResponse(response)
@@ -310,6 +359,58 @@ class ApiClient(baseUrl: String) {
         return decodeResponse(response)
     }
 
+    suspend fun listFiles(
+        token: String,
+        hostId: String,
+        sessionId: String? = null,
+        cwd: String? = null,
+        path: String? = null,
+    ): ListFilesResponse {
+        val queryParams = buildList {
+            sessionId?.takeIf { it.isNotBlank() }?.let { add("sessionId=${encode(it)}") }
+            cwd?.takeIf { it.isNotBlank() }?.let { add("cwd=${encode(it)}") }
+            path?.takeIf { it.isNotBlank() }?.let { add("path=${encode(it)}") }
+        }.joinToString("&")
+        val suffix = if (queryParams.isBlank()) "" else "?$queryParams"
+        val response = http.get("$baseUrl/api/hosts/$hostId/files$suffix") {
+            bearerAuth(token)
+        }
+        return decodeResponse(response)
+    }
+
+    suspend fun searchFiles(
+        token: String,
+        hostId: String,
+        query: String,
+        sessionId: String? = null,
+        cwd: String? = null,
+        path: String? = null,
+        limit: Int = 12,
+    ): SearchFilesResponse {
+        val queryParams = buildList {
+            sessionId?.takeIf { it.isNotBlank() }?.let { add("sessionId=${encode(it)}") }
+            cwd?.takeIf { it.isNotBlank() }?.let { add("cwd=${encode(it)}") }
+            path?.takeIf { it.isNotBlank() }?.let { add("path=${encode(it)}") }
+            add("query=${encode(query)}")
+            add("limit=$limit")
+        }.joinToString("&")
+        val response = http.get("$baseUrl/api/hosts/$hostId/files/search?$queryParams") {
+            bearerAuth(token)
+        }
+        return decodeResponse(response)
+    }
+
+    suspend fun listSkills(
+        token: String,
+        source: String? = null,
+    ): ListSkillsResponse {
+        val suffix = source?.takeIf { it.isNotBlank() }?.let { "?source=${encode(it)}" } ?: ""
+        val response = http.get("$baseUrl/api/skills$suffix") {
+            bearerAuth(token)
+        }
+        return decodeResponse(response)
+    }
+
     suspend fun createSession(
         token: String,
         hostId: String,
@@ -357,6 +458,27 @@ class ApiClient(baseUrl: String) {
         sessionId: String,
     ): Boolean {
         return archiveSessions(token, hostId, listOf(sessionId))
+    }
+
+    suspend fun unarchiveSessions(
+        token: String,
+        hostId: String,
+        sessionIds: List<String>,
+    ): Boolean {
+        http.post("$baseUrl/api/hosts/$hostId/sessions/unarchive") {
+            bearerAuth(token)
+            contentType(ContentType.Application.Json)
+            setBody(mapOf("sessionIds" to sessionIds))
+        }.body<UnarchiveSessionsResponse>()
+        return true
+    }
+
+    suspend fun unarchiveSession(
+        token: String,
+        hostId: String,
+        sessionId: String,
+    ): Boolean {
+        return unarchiveSessions(token, hostId, listOf(sessionId))
     }
 
     suspend fun startLiveRun(

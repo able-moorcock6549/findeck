@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { AccessSession } from "../schemas/access-session.js";
-import { MAX_PASSWORD_LENGTH, MAX_DEVICE_LABEL_LENGTH } from "../limits.js";
+import {
+  MAX_PASSWORD_LENGTH,
+  MAX_DEVICE_LABEL_LENGTH,
+  MAX_PAIRING_CODE_LENGTH,
+  MAX_TRUSTED_CLIENT_ID_LENGTH,
+  MAX_TRUSTED_CLIENT_SECRET_LENGTH,
+} from "../limits.js";
+import {
+  TrustedClient,
+  TrustedClientCredentials,
+} from "../schemas/trusted-client.js";
 
 // --- POST /api/auth/login ---
 
@@ -43,3 +53,42 @@ export type LogoutResponse = z.infer<typeof LogoutResponse>;
 
 export const GetAuthSessionResponse = AccessSession;
 export type GetAuthSessionResponse = z.infer<typeof GetAuthSessionResponse>;
+
+// --- POST /api/pairing/code ---
+
+export const PairingCodeResponse = z.object({
+  code: z.string(),
+  expiresAt: z.string().datetime(),
+});
+export type PairingCodeResponse = z.infer<typeof PairingCodeResponse>;
+
+// --- POST /api/pairing/claim ---
+
+export const PairingClaimRequest = z.object({
+  code: z.string().min(1).max(MAX_PAIRING_CODE_LENGTH),
+  deviceLabel: z.string().max(MAX_DEVICE_LABEL_LENGTH).optional(),
+});
+export type PairingClaimRequest = z.infer<typeof PairingClaimRequest>;
+
+export const PairingClaimResponse = z.object({
+  token: z.string(),
+  expiresAt: z.string().datetime(),
+  trustedClient: TrustedClientCredentials,
+});
+export type PairingClaimResponse = z.infer<typeof PairingClaimResponse>;
+
+// --- POST /api/auth/reconnect ---
+
+export const TrustedReconnectRequest = z.object({
+  clientId: z.string().min(1).max(MAX_TRUSTED_CLIENT_ID_LENGTH),
+  clientSecret: z.string().min(1).max(MAX_TRUSTED_CLIENT_SECRET_LENGTH),
+  deviceLabel: z.string().max(MAX_DEVICE_LABEL_LENGTH).optional(),
+});
+export type TrustedReconnectRequest = z.infer<typeof TrustedReconnectRequest>;
+
+export const TrustedReconnectResponse = z.object({
+  token: z.string(),
+  expiresAt: z.string().datetime(),
+  trustedClient: TrustedClient,
+});
+export type TrustedReconnectResponse = z.infer<typeof TrustedReconnectResponse>;

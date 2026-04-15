@@ -2,6 +2,9 @@
 <resources>
     <string name="content_desc_back">Back</string>
     <string name="content_desc_refresh">Refresh</string>
+    <string name="theme_toggle_auto">Theme: Auto</string>
+    <string name="theme_toggle_dark">Theme: Dark</string>
+    <string name="theme_toggle_light">Theme: Light</string>
 
     <string name="inbox_screen_title">Inbox</string>
     <string name="inbox_kind_link">Link</string>
@@ -79,4 +82,38 @@
     <string name="server_settings_password_updated_reconnected">Password updated and reconnected</string>
     <string name="server_settings_password_updated_restarting">Password updated. The service is restarting, please try again later</string>
     <string name="server_settings_current_server_unavailable">The current server is unavailable</string>
+    <string name="server_settings_trust_title">Pairing and reconnect</string>
+    <string name="server_settings_trust_message">Review the trust state, toggle auto reconnect, or clear the local trust record.</string>
+    <string name="server_settings_trust_badge_trusted">Paired</string>
+    <string name="server_settings_trust_badge_unpaired">Not paired</string>
+    <string name="server_settings_trust_auto_reconnect">Auto reconnect</string>
+    <string name="server_settings_trust_clear">Clear trust</string>
+    <string name="server_settings_trust_enabled">Auto reconnect enabled</string>
+    <string name="server_settings_trust_disabled">Auto reconnect disabled</string>
+    <string name="server_settings_trust_cleared">Trust record cleared</string>
+    <string name="server_settings_trust_pair_button">Go pair</string>
+    <string name="server_settings_appearance_title">Appearance</string>
+    <string name="server_settings_appearance_message">Switch the console theme on this device only. This does not change the host or web UI.</string>
+    <string name="server_settings_theme_auto">Auto</string>
+    <string name="server_settings_theme_light">Light</string>
+    <string name="server_settings_theme_dark">Dark</string>
+    <string name="server_settings_theme_cycle">Cycle theme</string>
+    <string name="server_settings_notifications_title">Notifications</string>
+    <string name="server_settings_notifications_enabled">System notifications are available for completed runs and attention-needed events.</string>
+    <string name="server_settings_notifications_disabled">Notification permission is missing, or the system notification switch is off.</string>
+    <string name="server_settings_notifications_manage">Manage system notifications</string>
+    <string name="server_settings_notifications_state_on">On</string>
+    <string name="server_settings_notifications_state_off">Off</string>
+    <string name="server_settings_runtime_title">Runtime defaults</string>
+    <string name="server_settings_runtime_message">These defaults belong to the current host and seed newly opened sessions before you change them per chat.</string>
+    <string name="server_settings_runtime_state_label">Default runtime</string>
+    <string name="server_settings_runtime_saved">Runtime defaults saved</string>
+    <string name="server_settings_runtime_reset">Reset to auto defaults</string>
+    <string name="server_settings_password_title">App password</string>
+    <string name="server_settings_password_message">Change the current host app password and reconnect automatically whenever possible.</string>
+    <string name="server_settings_password_state_label">Password and reconnect</string>
+    <string name="server_settings_trust_label_title">Trust label</string>
+    <string name="server_settings_trust_method_title">Pairing method</string>
+    <string name="server_settings_trust_paired_at_title">First paired</string>
+    <string name="server_settings_trust_last_reconnect_title">Last auto reconnect</string>
 </resources>

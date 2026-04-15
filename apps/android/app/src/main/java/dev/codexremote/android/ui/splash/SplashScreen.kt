@@ -1,7 +1,7 @@
 package dev.codexremote.android.ui.splash
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,12 +15,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,13 +32,64 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.codexremote.android.R
-import kotlinx.coroutines.delay
+import dev.codexremote.android.StartupUiState
+import dev.codexremote.android.ui.sessions.TimelineNoticeCard
+import dev.codexremote.android.ui.sessions.TimelineNoticeTone
 
 @Composable
-fun SplashScreen(onNavigateToServers: () -> Unit) {
-    LaunchedEffect(Unit) {
-        delay(1200)
-        onNavigateToServers()
+fun SplashScreen(
+    startupState: StartupUiState,
+    onOpenServers: () -> Unit,
+    onOpenPairing: () -> Unit,
+) {
+    val title = when (startupState) {
+        StartupUiState.Loading -> stringResource(R.string.splash_loading_title)
+        StartupUiState.NoTrustedServer -> stringResource(R.string.splash_waiting_pairing_title)
+        is StartupUiState.Reconnecting -> stringResource(R.string.splash_reconnecting_title)
+        is StartupUiState.Reconnected -> stringResource(R.string.splash_reconnected_title)
+        is StartupUiState.ReconnectFailed -> stringResource(R.string.splash_reconnect_failed_title)
+    }
+    val message = when (startupState) {
+        StartupUiState.Loading -> stringResource(R.string.splash_loading_message)
+        StartupUiState.NoTrustedServer -> stringResource(R.string.splash_waiting_pairing_message)
+        is StartupUiState.Reconnecting -> stringResource(
+            R.string.splash_reconnecting_message,
+            startupState.serverLabel,
+        )
+        is StartupUiState.Reconnected -> stringResource(
+            R.string.splash_reconnected_message,
+            startupState.serverLabel,
+        )
+        is StartupUiState.ReconnectFailed -> startupState.message
+    }
+    val footer = when (startupState) {
+        StartupUiState.Loading -> stringResource(R.string.splash_bootstrap_note)
+        StartupUiState.NoTrustedServer -> stringResource(R.string.splash_waiting_pairing_footer)
+        is StartupUiState.Reconnecting -> stringResource(R.string.splash_reconnecting_footer)
+        is StartupUiState.Reconnected -> stringResource(R.string.splash_reconnected_footer)
+        is StartupUiState.ReconnectFailed -> stringResource(R.string.splash_reconnect_failed_footer)
+    }
+    val stateLabel = when (startupState) {
+        StartupUiState.Loading -> stringResource(R.string.splash_state_loading)
+        StartupUiState.NoTrustedServer -> stringResource(R.string.splash_state_waiting_pairing)
+        is StartupUiState.Reconnecting -> stringResource(R.string.splash_state_reconnecting)
+        is StartupUiState.Reconnected -> stringResource(R.string.splash_state_reconnected)
+        is StartupUiState.ReconnectFailed -> stringResource(R.string.splash_state_reconnect_failed)
+    }
+    val tone = when (startupState) {
+        StartupUiState.Loading,
+        is StartupUiState.Reconnecting,
+        is StartupUiState.Reconnected -> TimelineNoticeTone.Neutral
+        StartupUiState.NoTrustedServer -> TimelineNoticeTone.Warning
+        is StartupUiState.ReconnectFailed -> TimelineNoticeTone.Error
+    }
+    val showSpinner = startupState is StartupUiState.Loading || startupState is StartupUiState.Reconnecting
+    val targetServerLabel = when (startupState) {
+        is StartupUiState.Reconnecting -> startupState.serverLabel
+        is StartupUiState.Reconnected -> startupState.serverLabel
+        is StartupUiState.ReconnectFailed -> startupState.serverLabel
+        StartupUiState.Loading,
+        StartupUiState.NoTrustedServer -> null
     }
 
     Surface(
@@ -87,7 +140,7 @@ fun SplashScreen(onNavigateToServers: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 28.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -98,9 +151,9 @@ fun SplashScreen(onNavigateToServers: () -> Unit) {
                     shadowElevation = 20.dp,
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 28.dp, vertical = 28.dp),
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         Surface(
                             modifier = Modifier.size(92.dp),
@@ -150,34 +203,50 @@ fun SplashScreen(onNavigateToServers: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             MiniPill(text = stringResource(R.string.console_brand_label))
-                            MiniPill(text = stringResource(R.string.splash_bootstrap_state))
+                            MiniPill(text = stateLabel)
                         }
 
-                        Text(
-                            text = stringResource(R.string.splash_bootstrap_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        TimelineNoticeCard(
+                            title = title,
+                            message = message,
+                            footer = footer,
+                            tone = tone,
+                            stateLabel = targetServerLabel?.takeIf { it.isNotBlank() },
+                            content = {
+                                if (showSpinner) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.splash_loading_detail),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            },
                         )
 
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(width = 36.dp, height = 6.dp)
-                                    .clip(RoundedCornerShape(999.dp))
+                            Button(
+                                onClick = onOpenServers,
+                                modifier = Modifier.weight(1f),
                             ) {
-                                Surface(
-                                    modifier = Modifier.fillMaxSize(),
-                                    color = MaterialTheme.colorScheme.primary,
-                                ) {}
+                                Text(stringResource(R.string.splash_open_servers_button))
                             }
-                            Text(
-                                text = stringResource(R.string.splash_status),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                            TextButton(onClick = onOpenPairing) {
+                                Text(stringResource(R.string.splash_open_pairing_button))
+                            }
                         }
                     }
                 }

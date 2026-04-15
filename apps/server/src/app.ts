@@ -3,7 +3,10 @@ import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import { healthRoutes } from "./routes/health.js";
 import { authRoutes } from "./routes/auth.js";
+import { pairingRoutes } from "./routes/pairing.js";
 import { sessionRoutes } from "./routes/sessions.js";
+import { fileRoutes } from "./routes/files.js";
+import { skillRoutes } from "./routes/skills.js";
 import { projectRoutes } from "./routes/projects.js";
 import { liveRunRoutes } from "./routes/live-runs.js";
 import { uploadRoutes } from "./routes/uploads.js";
@@ -137,6 +140,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<{
 
   // ── Public routes (no token required) ────────────────────────────
   await app.register(healthRoutes(runManager));
+  await app.register(pairingRoutes());
   await app.register(authRoutes({
     authRateLimitMax: opts.authRateLimitMax ?? AUTH_RATE_LIMIT_MAX,
     authRateLimitWindowMs: opts.authRateLimitWindowMs ?? AUTH_RATE_LIMIT_WINDOW_MS,
@@ -149,6 +153,8 @@ export async function buildApp(opts: AppOptions = {}): Promise<{
     scope.addHook("preHandler", requireAuth);
 
     await scope.register(sessionRoutes(adapter, runManager));
+    await scope.register(fileRoutes(adapter));
+    await scope.register(skillRoutes());
     await scope.register(projectRoutes());
     await scope.register(liveRunRoutes(runManager, {
       sseIdleTimeoutMs: opts.sseIdleTimeoutMs,

@@ -84,6 +84,10 @@
     <string name="session_detail_error_add_attachment">添加附件失败</string>
     <string name="session_detail_error_missing_cwd">缺少项目目录，无法创建会话</string>
     <string name="session_detail_error_repo_action">仓库操作失败</string>
+    <string name="session_detail_feedback_title">会话更新</string>
+    <string name="session_detail_feedback_run_completed">本轮已完成，结果已同步。</string>
+    <string name="session_detail_feedback_run_failed">本轮失败，已保留最后一次可见输出。</string>
+    <string name="session_detail_feedback_run_stopped">本轮已停止。</string>
     <string name="session_detail_error_create_session">创建会话失败</string>
     <string name="session_control_refreshing">正在同步界面</string>
     <string name="session_control_stream_ready">实时连接已就绪</string>
@@ -105,6 +109,26 @@
     <string name="composer_queue_label">排队</string>
     <string name="composer_stop_run_desc">停止运行</string>
     <string name="composer_send_label">发送</string>
+    <string name="composer_suggestions_hint">点按即可插入到当前输入框</string>
+    <string name="composer_suggestions_command_title">命令</string>
+    <string name="composer_suggestions_file_title">文件</string>
+    <string name="composer_suggestions_skill_title">技能</string>
+    <string name="composer_suggestion_status_detail">查看当前会话状态</string>
+    <string name="composer_suggestion_archive_detail">归档当前会话</string>
+    <string name="composer_suggestion_pair_detail">打开配对流程</string>
+    <string name="composer_suggestion_new_detail">创建新会话</string>
+    <string name="composer_suggestion_refresh_detail">刷新当前会话与实时状态</string>
+    <string name="composer_suggestion_stop_detail">停止当前运行</string>
+    <string name="composer_suggestion_file_detail_local">本地附件</string>
+    <string name="composer_suggestion_file_detail_remote">已上传附件</string>
+    <string name="composer_suggestion_file_detail_workspace">工作区文件</string>
+    <string name="composer_suggestion_file_detail_directory">目录，点按继续浏览</string>
+    <string name="composer_suggestions_file_up">返回上一级目录</string>
+    <string name="composer_suggestions_filter_all">全部</string>
+    <string name="composer_suggestions_filter_repo">仓库内</string>
+    <string name="composer_suggestions_filter_home">用户技能</string>
+    <string name="composer_suggestion_skill_source_repo">仓库技能</string>
+    <string name="composer_suggestion_skill_source_home">用户技能</string>
     <string name="scroll_to_bottom_new_content">收到新内容</string>
     <string name="scroll_to_bottom_default">回到底部</string>
 </resources>

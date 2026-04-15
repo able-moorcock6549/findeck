@@ -23,8 +23,36 @@
     <string name="session_list_content_desc_new_project">New project</string>
     <string name="session_list_content_desc_menu">Menu</string>
     <string name="session_list_menu_inbox">Inbox</string>
+    <string name="session_list_menu_archived">Archived</string>
     <string name="session_list_menu_refresh">Refresh</string>
     <string name="session_list_menu_settings">Settings</string>
+    <string name="session_list_search_label">Search sessions</string>
+    <string name="session_list_search_placeholder">Filter by title, preview, or path</string>
+    <string name="session_list_search_empty_title">No matching sessions</string>
+    <string name="session_list_search_empty_message">Try a different keyword, or clear the search to browse every project folder again.</string>
+    <string name="session_list_search_empty_footer">Search does not change sorting or hidden-folder state.</string>
+    <string name="session_list_search_empty_state">No results</string>
+    <string name="session_list_archive_success">Archived %1$d sessions</string>
+    <string name="session_list_error_unarchive_failed">Failed to restore archived sessions</string>
+
+    <string name="session_archived_title">Archived sessions</string>
+    <string name="session_archived_search_label">Search archived sessions</string>
+    <string name="session_archived_search_placeholder">Filter by title, preview, or path</string>
+    <string name="session_archived_loading_title">Loading archived sessions</string>
+    <string name="session_archived_loading_message">Collecting archived session records from the current host.</string>
+    <string name="session_archived_loading_footer">Once restored, they return to the main session list.</string>
+    <string name="session_archived_loading_state">Loading</string>
+    <string name="session_archived_error_title">Failed to load archived sessions</string>
+    <string name="session_archived_error_footer">If the host is reachable, refreshing usually recovers it.</string>
+    <string name="session_archived_error_state">Error</string>
+    <string name="session_archived_retry">Retry</string>
+    <string name="session_archived_empty_title">No archived sessions yet</string>
+    <string name="session_archived_empty_message">Once you archive a session from the main list, it will appear here.</string>
+    <string name="session_archived_empty_search_message">No archived sessions match the current search.</string>
+    <string name="session_archived_empty_footer">Restoring a session sends it back to the main list.</string>
+    <string name="session_archived_empty_state">Empty state</string>
+    <string name="session_archived_unarchive_action">Restore</string>
+    <string name="session_archived_unarchive_success">Restored “%1$s”</string>
 
     <string name="session_list_error_unknown">Unknown error</string>
     <string name="session_list_error_hint">Please refresh and try again, or check the network connection.</string>

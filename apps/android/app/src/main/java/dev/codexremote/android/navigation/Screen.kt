@@ -16,6 +16,12 @@ sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
     data object ServerList : Screen("servers")
     data object AddServer : Screen("servers/add")
+    data object Pairing : Screen("pairing?serverId={$ARG_SERVER_ID}") {
+        fun createRoute(serverId: String? = null): String {
+            val encoded = serverId?.takeIf { it.isNotBlank() }?.let(android.net.Uri::encode).orEmpty()
+            return "pairing?serverId=$encoded"
+        }
+    }
     data object Login : Screen("login/{$ARG_SERVER_ID}") {
         fun createRoute(serverId: String) = "login/${android.net.Uri.encode(serverId)}"
     }
@@ -36,6 +42,9 @@ sealed class Screen(val route: String) {
     }
     data object Inbox : Screen("inbox/{$ARG_SERVER_ID}") {
         fun createRoute(serverId: String) = "inbox/${android.net.Uri.encode(serverId)}"
+    }
+    data object ArchivedSessions : Screen("sessions/{$ARG_SERVER_ID}/archived") {
+        fun createRoute(serverId: String) = "sessions/${android.net.Uri.encode(serverId)}/archived"
     }
     data object Settings : Screen("settings/{$ARG_SERVER_ID}") {
         fun createRoute(serverId: String) = "settings/${android.net.Uri.encode(serverId)}"

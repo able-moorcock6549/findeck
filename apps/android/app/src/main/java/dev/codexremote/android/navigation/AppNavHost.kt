@@ -7,17 +7,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import dev.codexremote.android.notifications.RunCompletedNotificationPayload
+import dev.codexremote.android.StartupUiState
 import dev.codexremote.android.ui.theme.ThemePreference
 import dev.codexremote.android.ui.login.LoginScreen
 import dev.codexremote.android.ui.inbox.InboxScreen
 import dev.codexremote.android.ui.servers.AddServerScreen
+import dev.codexremote.android.ui.servers.PairingScreen
 import dev.codexremote.android.ui.settings.ServerSettingsScreen
 import dev.codexremote.android.ui.sessions.NewSessionScreen
 import dev.codexremote.android.ui.servers.ServerListScreen
+import dev.codexremote.android.ui.sessions.ArchivedSessionsScreen
 import dev.codexremote.android.ui.sessions.SessionDetailScreen
 import dev.codexremote.android.ui.sessions.SessionListScreen
 import dev.codexremote.android.ui.splash.SplashScreen
@@ -39,10 +43,13 @@ private fun NavHostController.navigateToServerScopedTopLevel(
 fun AppNavHost(
     themePreference: ThemePreference,
     onToggleTheme: () -> Unit,
+    startupState: StartupUiState,
     pendingNotificationPayload: RunCompletedNotificationPayload? = null,
     onPendingNotificationHandled: () -> Unit = {},
 ) {
     val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
 
     LaunchedEffect(pendingNotificationPayload) {
         val payload = pendingNotificationPayload ?: return@LaunchedEffect
@@ -52,15 +59,51 @@ fun AppNavHost(
         onPendingNotificationHandled()
     }
 
+    LaunchedEffect(startupState, currentRoute) {
+        if (currentRoute != Screen.Splash.route) return@LaunchedEffect
+        when (val state = startupState) {
+            StartupUiState.Loading,
+            is StartupUiState.Reconnecting,
+            StartupUiState.NoTrustedServer -> Unit
+
+            is StartupUiState.Reconnected -> {
+                navController.navigate(Screen.SessionList.createRoute(state.serverId)) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+
+            is StartupUiState.ReconnectFailed -> {
+                val targetRoute = if (state.requiresPairing) {
+                    Screen.Pairing.createRoute(state.serverId)
+                } else {
+                    Screen.Login.createRoute(state.serverId)
+                }
+                navController.navigate(targetRoute) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
 
         composable(Screen.Splash.route) {
             SplashScreen(
-                onNavigateToServers = {
+                startupState = startupState,
+                onOpenServers = {
                     navController.navigate(Screen.ServerList.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
+                        launchSingleTop = true
                     }
-                }
+                },
+                onOpenPairing = {
+                    navController.navigate(Screen.Pairing.createRoute()) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -69,6 +112,11 @@ fun AppNavHost(
                 themePreference = themePreference,
                 onToggleTheme = onToggleTheme,
                 onAddServer = { navController.navigate(Screen.AddServer.route) },
+                onPairServer = { serverId ->
+                    navController.navigate(Screen.Pairing.createRoute(serverId)) {
+                        launchSingleTop = true
+                    }
+                },
                 onSelectServer = { serverId ->
                     navController.navigate(Screen.Login.createRoute(serverId)) {
                         launchSingleTop = true
@@ -85,7 +133,35 @@ fun AppNavHost(
         composable(Screen.AddServer.route) {
             AddServerScreen(
                 onServerAdded = { navController.popBackStack() },
-                onCancel = { navController.popBackStack() }
+                onCancel = { navController.popBackStack() },
+                onOpenPairing = {
+                    navController.navigate(Screen.Pairing.createRoute()) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Screen.Pairing.route,
+            arguments = listOf(
+                navArgument(Screen.ARG_SERVER_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val serverId = backStackEntry.arguments?.getString(Screen.ARG_SERVER_ID)?.ifBlank { null }
+            PairingScreen(
+                serverId = serverId,
+                onBack = { navController.popBackStack() },
+                onPairingComplete = { pairedServerId ->
+                    navController.navigate(Screen.SessionList.createRoute(pairedServerId)) {
+                        popUpTo(Screen.ServerList.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -131,6 +207,12 @@ fun AppNavHost(
                     navController.navigateToServerScopedTopLevel(
                         serverId = serverId,
                         targetRoute = Screen.Inbox.createRoute(serverId),
+                    )
+                },
+                onOpenArchived = {
+                    navController.navigateToServerScopedTopLevel(
+                        serverId = serverId,
+                        targetRoute = Screen.ArchivedSessions.createRoute(serverId),
                     )
                 },
                 onOpenSettings = {
@@ -221,6 +303,22 @@ fun AppNavHost(
                         launchSingleTop = true
                     }
                 },
+                onOpenNewThread = { selectedCwd ->
+                    if (selectedCwd != null) {
+                        navController.navigate(Screen.DraftSessionDetail.createRoute(serverId, selectedCwd)) {
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate(Screen.NewSession.createRoute(serverId)) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                onOpenPairing = {
+                    navController.navigate(Screen.Pairing.createRoute(serverId)) {
+                        launchSingleTop = true
+                    }
+                },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -238,6 +336,18 @@ fun AppNavHost(
         }
 
         composable(
+            route = Screen.ArchivedSessions.route,
+            arguments = listOf(navArgument(Screen.ARG_SERVER_ID) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val serverId =
+                backStackEntry.arguments?.getString(Screen.ARG_SERVER_ID) ?: return@composable
+            ArchivedSessionsScreen(
+                serverId = serverId,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(
             route = Screen.Settings.route,
             arguments = listOf(navArgument(Screen.ARG_SERVER_ID) { type = NavType.StringType })
         ) { backStackEntry ->
@@ -245,7 +355,14 @@ fun AppNavHost(
                 backStackEntry.arguments?.getString(Screen.ARG_SERVER_ID) ?: return@composable
             ServerSettingsScreen(
                 serverId = serverId,
+                themePreference = themePreference,
+                onToggleTheme = onToggleTheme,
                 onBack = { navController.popBackStack() },
+                onOpenPairing = {
+                    navController.navigate(Screen.Pairing.createRoute(serverId)) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -271,6 +388,22 @@ fun AppNavHost(
                 themePreference = themePreference,
                 onToggleTheme = onToggleTheme,
                 onSessionCreated = { _, _ -> },
+                onOpenNewThread = { selectedCwd ->
+                    if (selectedCwd != null) {
+                        navController.navigate(Screen.DraftSessionDetail.createRoute(serverId, selectedCwd)) {
+                            launchSingleTop = true
+                        }
+                    } else {
+                        navController.navigate(Screen.NewSession.createRoute(serverId)) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                onOpenPairing = {
+                    navController.navigate(Screen.Pairing.createRoute(serverId)) {
+                        launchSingleTop = true
+                    }
+                },
                 onBack = { navController.popBackStack() }
             )
         }

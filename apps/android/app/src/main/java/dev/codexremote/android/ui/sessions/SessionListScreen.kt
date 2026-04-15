@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
@@ -56,6 +57,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -67,6 +69,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +88,7 @@ import dev.codexremote.android.data.network.ApiClient
 import dev.codexremote.android.data.network.UnauthorizedException
 import dev.codexremote.android.data.repository.ServerRepository
 import dev.codexremote.android.data.repository.SessionFolderSortOrder
+import dev.codexremote.android.ui.theme.PrecisionConsoleSnackbarHost
 import dev.codexremote.android.ui.theme.ThemePreference
 import dev.codexremote.android.ui.theme.ThemeToggleAction
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -224,7 +228,12 @@ private fun buildProjectFolders(
         }
 
     val visibleFolders = folders.filterNot { it.persistenceKey in hiddenFolderKeys }
-    if (visibleFolders.isEmpty()) {
+    val effectiveFolders = when {
+        visibleFolders.isNotEmpty() -> visibleFolders
+        folders.isNotEmpty() -> folders
+        else -> emptyList()
+    }
+    if (effectiveFolders.isEmpty()) {
         return emptyList()
     }
 
@@ -246,7 +255,7 @@ private fun buildProjectFolders(
             }
         }
     }
-    return visibleFolders.sortedWith(comparator)
+    return effectiveFolders.sortedWith(comparator)
 }
 
 private fun SessionFolderSortOrder.next(): SessionFolderSortOrder = when (this) {
@@ -432,6 +441,15 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun archiveSessions(serverId: String, sessionIds: List<String>) {
+        archiveSessions(serverId, sessionIds, onSuccess = {}, onError = {})
+    }
+
+    fun archiveSessions(
+        serverId: String,
+        sessionIds: List<String>,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
@@ -440,11 +458,14 @@ class SessionListViewModel(application: Application) : AndroidViewModel(applicat
                     client.archiveSessions(token, hostId = "local", sessionIds = sessionIds)
                 }
                 refreshSessions(serverId)
+                onSuccess()
             } catch (e: Exception) {
-                _error.value = userFacingMessage(
+                val message = userFacingMessage(
                     e,
                     getApplication<Application>().getString(R.string.session_list_error_archive_failed),
                 )
+                _error.value = message
+                onError(message)
             } finally {
                 _loading.value = false
             }
@@ -467,6 +488,7 @@ fun SessionListScreen(
     onToggleTheme: () -> Unit,
     onSelectSession: (hostId: String, sessionId: String) -> Unit,
     onOpenInbox: () -> Unit,
+    onOpenArchived: () -> Unit,
     onOpenSettings: () -> Unit,
     onNewProject: () -> Unit,
     onNewThread: (cwd: String?) -> Unit,
@@ -514,10 +536,35 @@ fun SessionListScreen(
     var selectedSessionIds by remember { mutableStateOf(setOf<String>()) }
     var duplicateProjectPath by remember { mutableStateOf<String?>(null) }
     var topMenuExpanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val dragFolders = remember(serverId) { mutableStateListOf<ProjectFolder>() }
     var orderDirty by remember { mutableStateOf(false) }
     val selectionMode = selectedSessionIds.isNotEmpty()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val normalizedSearch = searchQuery.trim().lowercase()
+    val dragFolderSnapshot = dragFolders.toList().ifEmpty { folders }
+    val displayFolders = remember(dragFolderSnapshot, normalizedSearch) {
+        if (normalizedSearch.isBlank()) {
+            dragFolderSnapshot
+        } else {
+            dragFolderSnapshot.mapNotNull { folder ->
+                val folderMatches = folder.label.lowercase().contains(normalizedSearch) ||
+                    folder.path.orEmpty().lowercase().contains(normalizedSearch)
+                val filteredSessions = folder.sessions.filter { session ->
+                    session.title.lowercase().contains(normalizedSearch) ||
+                        session.lastPreview.orEmpty().lowercase().contains(normalizedSearch) ||
+                        session.cwd.orEmpty().lowercase().contains(normalizedSearch)
+                }
+                when {
+                    folderMatches -> folder
+                    filteredSessions.isNotEmpty() -> folder.copy(sessions = filteredSessions)
+                    else -> null
+                }
+            }
+        }
+    }
 
     LaunchedEffect(folders) {
         dragFolders.clear()
@@ -554,19 +601,10 @@ fun SessionListScreen(
     }
 
     Scaffold(
+        snackbarHost = { PrecisionConsoleSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
-                    val projectCountText = pluralStringResource(
-                        R.plurals.session_list_navigation_project_count,
-                        folders.size,
-                        folders.size,
-                    )
-                    val sessionCountText = pluralStringResource(
-                        R.plurals.session_list_navigation_session_count,
-                        sessions.size,
-                        sessions.size,
-                    )
                     Column {
                         Text(
                             text = stringResource(R.string.console_brand_label),
@@ -579,15 +617,6 @@ fun SessionListScreen(
                                 stringResource(R.string.session_list_title_project_folders)
                             },
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            text = when {
-                                selectionMode -> stringResource(R.string.session_list_subtitle_selected_sessions)
-                                loading -> stringResource(R.string.session_list_subtitle_refreshing, projectCountText)
-                                else -> stringResource(R.string.session_list_subtitle_overview, projectCountText, sessionCountText)
-                            },
-                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -627,7 +656,24 @@ fun SessionListScreen(
                         }
                         IconButton(
                             onClick = {
-                                viewModel.archiveSessions(serverId, selectedSessionIds.toList())
+                                val archivedSelectionCount = selectedSessionIds.size
+                                viewModel.archiveSessions(
+                                    serverId,
+                                    selectedSessionIds.toList(),
+                                    onSuccess = {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                resources.getString(
+                                                    R.string.session_list_archive_success,
+                                                    archivedSelectionCount,
+                                                ),
+                                            )
+                                        }
+                                    },
+                                    onError = { message ->
+                                        scope.launch { snackbarHostState.showSnackbar(message) }
+                                    },
+                                )
                                 selectedSessionIds = emptySet()
                             }
                         ) {
@@ -672,6 +718,16 @@ fun SessionListScreen(
                                     onClick = {
                                         topMenuExpanded = false
                                         onOpenInbox()
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.session_list_menu_archived)) },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Archive, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        topMenuExpanded = false
+                                        onOpenArchived()
                                     },
                                 )
                                 DropdownMenuItem(
@@ -775,24 +831,52 @@ fun SessionListScreen(
             else -> {
                 Column(modifier = Modifier.padding(padding)) {
                     SessionNavigationSummary(
-                        folderCount = folders.size,
-                        sessionCount = sessions.size,
+                        folderCount = displayFolders.size,
+                        sessionCount = displayFolders.sumOf { it.sessions.size },
                         recentSessionCount = recentSessionCount,
                         currentProjectFolder = currentProjectFolder,
                         selectionMode = selectionMode,
                         selectedCount = selectedSessionIds.size,
                     )
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(Icons.Filled.Search, contentDescription = null)
+                        },
+                        label = { Text(stringResource(R.string.session_list_search_label)) },
+                        placeholder = { Text(stringResource(R.string.session_list_search_placeholder)) },
+                    )
                     SessionFolderControls(
                         sortOrder = folderSortOrder,
                         onCycleSort = { viewModel.cycleFolderSort(serverId) },
                     )
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = listState,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                    ) {
-                        items(dragFolders, key = { folder -> folder.key }) { folder ->
+                    if (displayFolders.isEmpty() && normalizedSearch.isNotBlank()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            TimelineNoticeCard(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                title = stringResource(R.string.session_list_search_empty_title),
+                                message = stringResource(R.string.session_list_search_empty_message),
+                                footer = stringResource(R.string.session_list_search_empty_footer),
+                                tone = TimelineNoticeTone.Neutral,
+                                stateLabel = stringResource(R.string.session_list_search_empty_state),
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        ) {
+                            items(displayFolders, key = { folder -> folder.key }) { folder ->
                             ReorderableItem(
                                 reorderableLazyListState,
                                 key = folder.key,
@@ -823,7 +907,7 @@ fun SessionListScreen(
                                                 }
                                             },
                                         ),
-                                        reorderEnabled = dragFolders.size > 1,
+                                        reorderEnabled = dragFolders.size > 1 && normalizedSearch.isBlank(),
                                         dragging = isDragging,
                                     )
 
@@ -861,6 +945,7 @@ fun SessionListScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

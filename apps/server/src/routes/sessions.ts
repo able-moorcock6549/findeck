@@ -8,6 +8,7 @@ import {
   CreateSessionRequest,
   UpdateSessionTitleRequest,
   ArchiveSessionsRequest,
+  UnarchiveSessionsRequest,
   SessionDetailResponse,
   RepoActionRequest,
   RepoActionResponse,
@@ -20,6 +21,7 @@ import {
   type CreateSessionResponse,
   type UpdateSessionTitleResponse,
   type ArchiveSessionsResponse,
+  type UnarchiveSessionsResponse,
   type Session,
 } from "@codexremote/shared";
 import type { CodexAdapter } from "../codex/index.js";
@@ -65,7 +67,7 @@ export function sessionRoutes(adapter: CodexAdapter, runManager?: RunManager) {
         );
         const now = new Date().toISOString();
 
-        const sessions: Session[] = summaries.map((s) => ({
+        const allSessions: Session[] = summaries.map((s) => ({
           id: s.codexSessionId,
           hostId: LOCAL_HOST_ID,
           provider: "codex" as const,
@@ -79,8 +81,57 @@ export function sessionRoutes(adapter: CodexAdapter, runManager?: RunManager) {
           updatedAt: s.lastActivityAt ?? now,
           lastPreview: s.lastPreview ?? null,
           archivedAt: stored.get(s.codexSessionId)?.archivedAt ?? null,
-        })).filter((session) => !session.archivedAt)
-          .filter((session) => isDisplayableSession(session));
+        })).filter((session) => !session.archivedAt);
+
+        const displayableSessions = allSessions.filter((session) => isDisplayableSession(session));
+        const sessions =
+          displayableSessions.length > 0 || allSessions.length === 0
+            ? displayableSessions
+            : allSessions;
+
+        const body: ListSessionsResponse = { sessions };
+        return reply.send(body);
+      },
+    );
+
+    app.get(
+      "/api/hosts/:hostId/sessions/archived",
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const parsed = ListSessionsParams.safeParse(request.params);
+        if (!parsed.success) {
+          return reply.status(400).send({ error: "Invalid route params" });
+        }
+
+        if (parsed.data.hostId !== LOCAL_HOST_ID) {
+          return reply
+            .status(404)
+            .send({ error: `Host '${parsed.data.hostId}' not found` });
+        }
+
+        const summaries = await adapter.listSessions();
+        const summaryMap = new Map(
+          summaries.map((summary) => [summary.codexSessionId, summary] as const),
+        );
+        const now = new Date().toISOString();
+
+        const sessions: Session[] = getArchivedSessionRows().map((row) => {
+          const summary = summaryMap.get(row.id);
+          return {
+            id: row.id,
+            hostId: LOCAL_HOST_ID,
+            provider: "codex" as const,
+            codexSessionId: row.id,
+            title:
+              getPreferredTitle(row.title, row.id) ??
+              summary?.title ??
+              row.id,
+            cwd: summary?.cwd ?? row.cwd,
+            createdAt: row.createdAt ?? summary?.lastActivityAt ?? now,
+            updatedAt: summary?.lastActivityAt ?? row.createdAt ?? now,
+            lastPreview: summary?.lastPreview ?? null,
+            archivedAt: row.archivedAt,
+          };
+        }).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
         const body: ListSessionsResponse = { sessions };
         return reply.send(body);
@@ -385,6 +436,46 @@ export function sessionRoutes(adapter: CodexAdapter, runManager?: RunManager) {
         return reply.send(body);
       },
     );
+
+    app.post(
+      "/api/hosts/:hostId/sessions/unarchive",
+      async (request: FastifyRequest, reply: FastifyReply) => {
+        const params = ListSessionsParams.safeParse(request.params);
+        if (!params.success) {
+          return reply.status(400).send({ error: "Invalid route params" });
+        }
+
+        if (params.data.hostId !== LOCAL_HOST_ID) {
+          return reply
+            .status(404)
+            .send({ error: `Host '${params.data.hostId}' not found` });
+        }
+
+        const bodyParsed = UnarchiveSessionsRequest.safeParse(request.body);
+        if (!bodyParsed.success) {
+          return reply.status(400).send({ error: "Invalid request body" });
+        }
+
+        let unarchivedCount = 0;
+        for (const sessionId of bodyParsed.data.sessionIds) {
+          const result = getDb()
+            .prepare(
+              `UPDATE sessions
+                  SET archived_at = NULL,
+                      updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                WHERE id = ?
+                  AND archived_at IS NOT NULL`,
+            )
+            .run(sessionId);
+          if (result.changes > 0) {
+            unarchivedCount += 1;
+          }
+        }
+
+        const body: UnarchiveSessionsResponse = { ok: true, unarchivedCount };
+        return reply.send(body);
+      },
+    );
   };
 }
 
@@ -459,6 +550,18 @@ function getStoredSessionRow(sessionId: string): StoredSessionRow | null {
       )
       .get(sessionId) as StoredSessionRow | undefined) ?? null
   );
+}
+
+function getArchivedSessionRows(): StoredSessionRow[] {
+  return getDb()
+    .prepare(
+      `SELECT id, title, cwd, created_at as createdAt
+             , archived_at as archivedAt
+         FROM sessions
+        WHERE archived_at IS NOT NULL
+        ORDER BY archived_at DESC, updated_at DESC`,
+    )
+    .all() as StoredSessionRow[];
 }
 
 function getPreferredTitle(

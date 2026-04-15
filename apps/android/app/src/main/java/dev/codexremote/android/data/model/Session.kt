@@ -27,3 +27,9 @@ data class ArchiveSessionsResponse(
     val ok: Boolean,
     val archivedCount: Int,
 )
+
+@Serializable
+data class UnarchiveSessionsResponse(
+    val ok: Boolean,
+    val unarchivedCount: Int,
+)
