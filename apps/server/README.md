@@ -9,6 +9,7 @@ English: Fastify backend for CodexRemote.
 - 密码认证
 - 会话和运行状态持久化
 - SSE 实时更新
+- 会话级仓库状态与仓库操作入口
 - 文件上传
 - inbox intake 与 staging 存储
 - 健康检查和审计可见性
@@ -17,6 +18,7 @@ English:
 - password authentication
 - session and run metadata persistence
 - SSE updates for live runs
+- session-scoped repo status and repo action endpoints
 - upload handling
 - inbox intake and staging storage
 - health and audit visibility

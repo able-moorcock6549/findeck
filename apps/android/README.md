@@ -18,7 +18,7 @@ English: Native Android client for CodexRemote.
 - 服务器列表与添加服务器
 - 登录
 - 会话列表
-- 原生会话详情
+- 原生会话详情（运行控制、队列、仓库状态与仓库操作）
 - Inbox 投递与最近记录
 - 设置（修改当前服务密码）
 
@@ -27,7 +27,7 @@ English:
 - Server list and add-server flow
 - Login
 - Session list
-- Native session detail
+- Native session detail with run controls, queued prompts, repo status, and repo actions
 - Inbox submit flow and recent history
 - Settings (change the current service password)
 
@@ -49,11 +49,11 @@ English: If `ANDROID_HOME` is already configured, you can skip `local.properties
 
 中文：
 - `baseUrl`：Fastify API 地址
-- `webUrl`：可选的 Web UI 地址，供会话详情 WebView 使用
+- `webUrl`：可选的 Web UI 地址，保留给需要直接打开 Web 控制台的场景
 
 English:
 - `baseUrl`: Fastify API origin
-- `webUrl`: optional web UI origin kept for compatibility; the main session-detail experience is now native Compose
+- `webUrl`: optional web UI origin kept for compatibility when opening the web console directly; the main session-detail experience is native Compose
 
 ## Inbox Behavior / Inbox 行为
 

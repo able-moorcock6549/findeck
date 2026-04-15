@@ -46,11 +46,11 @@ English: The web app connects to the backend through `CODEXREMOTE_API_URL`, whic
 中文：
 - 使用 App Router
 - Inbox 历史不是浏览器本地状态，而是从后端 staging 读取
-- 会话详情是完整 Web 页面，也被 Android WebView 复用
+- 会话详情仍然是完整 Web 页面，但 Android 端的主会话体验已经改为原生详情页
 
 English:
 - Uses the App Router
 - Inbox history is not browser-local state; it is loaded from backend staging
-- Session detail is implemented as a full web screen and reused by the Android WebView
+- Session detail remains a full web screen, while the primary Android session experience is now native
 
 更多运行说明 / More runtime details: [docs/operations.md](../../docs/operations.md)
