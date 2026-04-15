@@ -5,6 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${SKILL_DIR}/../.." && pwd)"
+PREPARE_SCRIPT="${SCRIPT_DIR}/prepare_apk_artifact.sh"
 
 DEFAULT_APK_PATH="${REPO_ROOT}/apps/android/app/build/outputs/apk/debug/app-debug.apk"
 DEFAULT_GRADLE_PATH="${REPO_ROOT}/apps/android/app/build.gradle.kts"
@@ -110,28 +111,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_command python3
-
-[[ -f "${APK_PATH}" ]] || fail "APK not found: ${APK_PATH}"
-
-if [[ -z "${VERSION_NAME}" ]]; then
-  [[ -f "${GRADLE_PATH}" ]] || fail "Gradle file not found: ${GRADLE_PATH}"
-  VERSION_NAME="$(python3 - "${GRADLE_PATH}" <<'PY'
-import pathlib
-import re
-import sys
-
-content = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
-match = re.search(r'versionName\s*=\s*"([^"]+)"', content)
-if not match:
-    raise SystemExit(1)
-print(match.group(1))
-PY
-)" || fail "could not read versionName from ${GRADLE_PATH}"
-fi
-
-if [[ -z "${VERSION_DATE}" ]]; then
-  VERSION_DATE="$(date -r "${APK_PATH}" '+%Y-%m-%d')"
-fi
+[[ -x "${PREPARE_SCRIPT}" ]] || fail "prepare script is not executable: ${PREPARE_SCRIPT}"
 
 parse_target() {
   python3 - "${TARGET_URL}" <<'PY'
@@ -212,11 +192,54 @@ if [[ -z "${LABEL}" ]]; then
   fi
 fi
 
-APK_NAME="${VERSION_DATE}_${LABEL}_v${VERSION_NAME}.apk"
+PREPARE_ARGS=(
+  --source "${APK_PATH}"
+  --gradle "${GRADLE_PATH}"
+  --output-dir "${OUTPUT_DIR}"
+  --label "${LABEL}"
+  --print-path-only
+)
 
-mkdir -p "${OUTPUT_DIR}"
-OUTPUT_APK_PATH="${OUTPUT_DIR}/${APK_NAME}"
-cp -f "${APK_PATH}" "${OUTPUT_APK_PATH}"
+if [[ -n "${VERSION_NAME}" ]]; then
+  PREPARE_ARGS+=(--version-name "${VERSION_NAME}")
+fi
+
+if [[ -n "${VERSION_DATE}" ]]; then
+  PREPARE_ARGS+=(--version-date "${VERSION_DATE}")
+fi
+
+OUTPUT_APK_PATH="$("${PREPARE_SCRIPT}" "${PREPARE_ARGS[@]}")"
+APK_NAME="$(basename "${OUTPUT_APK_PATH}")"
+
+if [[ -z "${VERSION_NAME}" ]]; then
+  VERSION_NAME="$(python3 - "${OUTPUT_APK_PATH}" <<'PY'
+import pathlib
+import re
+import sys
+
+name = pathlib.Path(sys.argv[1]).name
+match = re.search(r'_v([^/]+)\.apk$', name)
+if not match:
+    raise SystemExit(1)
+print(match.group(1))
+PY
+)" || fail "could not derive versionName from prepared APK path"
+fi
+
+if [[ -z "${VERSION_DATE}" ]]; then
+  VERSION_DATE="$(python3 - "${OUTPUT_APK_PATH}" <<'PY'
+import pathlib
+import re
+import sys
+
+name = pathlib.Path(sys.argv[1]).name
+match = re.search(r'^(\d{4}-\d{2}-\d{2})_', name)
+if not match:
+    raise SystemExit(1)
+print(match.group(1))
+PY
+)" || fail "could not derive version date from prepared APK path"
+fi
 
 REMOTE_DIR="${MOUNT_POINT}"
 if [[ -n "${REMOTE_SUBDIR}" ]]; then

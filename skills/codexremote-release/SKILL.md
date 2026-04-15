@@ -15,7 +15,8 @@ This skill turns the current CodexRemote workspace into a repeatable GitHub rele
 2. Run release validation for web and Android
 3. Commit release changes on `main`
 4. Push `main` to GitHub
-5. Create the matching GitHub release from the local release notes file
+5. Build the Android debug APK release artifact
+6. Create the matching GitHub release from the local release notes file and attach the APK
 
 ## Default Version Sources
 
@@ -53,16 +54,20 @@ This command:
 
 - validates versions are aligned
 - runs release checks
+- builds the Android debug APK asset
 - stages release changes
 - commits `Release v<version>`
 - pushes `main`
+- pushes the matching git tag
 - creates GitHub release `v<version>`
+- uploads the APK asset to that GitHub release
 
 Useful overrides:
 
 ```bash
 ./skills/codexremote-release/scripts/release_codexremote.sh --dry-run
 ./skills/codexremote-release/scripts/release_codexremote.sh --skip-release
+./skills/codexremote-release/scripts/release_codexremote.sh --skip-apk
 ./skills/codexremote-release/scripts/release_codexremote.sh --notes-file docs/release-notes-v0.1.4.md
 ```
 
@@ -73,10 +78,12 @@ Useful overrides:
 - The release notes file must exist before release creation
 - The script must fail fast on version mismatches between root, workspace packages, and Android
 - The script should support `--dry-run` for safe preview
-- APK publication is explicitly out of scope for this skill and must be handled by `apk-smb-sync`
+- GitHub release creation should attach the prepared APK asset by default
+- SMB publication stays in `apk-smb-sync`; GitHub release attachment belongs here
 
 ## Notes
 
 - This skill is intentionally project-specific rather than generic
 - The script uses `gh` for release creation, so GitHub auth must already be active
+- The APK asset should use the same prepared filename shape as SMB delivery: `YYYY-MM-DD_CodexRemote_v<version>.apk`
 - If the release tag already exists, stop and ask whether to skip release creation or edit the existing release manually
