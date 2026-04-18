@@ -1,6 +1,6 @@
 # Release Checklist
 
-## Release focus for v0.4.1
+## Release focus for v0.4.5
 
 - Web and Android session detail now follow the lighter `summary + tail + history pagination` entry path more consistently
 - Long-history sessions now default to lighter recent-history windows instead of dumping full history on first paint

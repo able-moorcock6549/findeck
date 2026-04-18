@@ -1,8 +1,8 @@
-# Release Notes v0.4.1
+# Release Notes v0.4.5
 
 ## Summary
 
-`v0.4.1` closes the current Paseo comparison execution plan for CodexRemote.
+`v0.4.5` closes the current Paseo comparison execution plan for CodexRemote.
 
 This release focuses on making session switching, session detail, and long-history handling feel lighter and more deliberate across Web and Android, while also tightening a few mobile-detail ergonomics discovered during final testing.
 
@@ -26,9 +26,9 @@ This release focuses on making session switching, session detail, and long-histo
 
 ## Versioning
 
-- Workspace packages: `0.4.1`
-- Android `versionName`: `0.4.1`
-- Android `versionCode`: `11`
+- Workspace packages: `0.4.5`
+- Android `versionName`: `0.4.5`
+- Android `versionCode`: `12`
 
 ## Validation
 
@@ -54,4 +54,4 @@ This release focuses on making session switching, session detail, and long-histo
 
 ## Delivery Artifact
 
-- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.4.1.apk`
+- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.4.5.apk`
