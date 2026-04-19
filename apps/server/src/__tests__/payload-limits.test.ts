@@ -14,7 +14,7 @@ import {
   MAX_REASONING_EFFORT_LENGTH,
   MAX_PASSWORD_LENGTH,
   MAX_DEVICE_LABEL_LENGTH,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import {
   MockCodexAdapter,
   createTestApp,

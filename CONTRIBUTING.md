@@ -1,17 +1,17 @@
-# Contributing to CodexRemote
+# Contributing to findeck
 
-中文：欢迎为 CodexRemote 做出贡献。这个项目目前仍然偏小型，但非常欢迎 issue、文档改进、bug 修复和功能建议。  
-English: Contributions to CodexRemote are welcome. The project is still intentionally small, but issues, documentation improvements, bug fixes, and feature suggestions are all appreciated.
+中文：欢迎为 findeck 做出贡献。这个项目目前仍然偏小型，但非常欢迎 issue、文档改进、bug 修复和功能建议。  
+English: Contributions to findeck are welcome. The project is still intentionally small, but issues, documentation improvements, bug fixes, and feature suggestions are all appreciated.
 
 ## Before You Start / 开始之前
 
 中文：
-- 请先阅读 [README.md](/Users/fainal/Documents/GitHub/CodexRemote/README.md) 和 [docs/operations.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/operations.md)
+- 请先阅读 [README.md](/Users/fainal/Documents/GitHub/findeck/README.md) 和 [docs/operations.md](/Users/fainal/Documents/GitHub/findeck/docs/operations.md)
 - 优先提交小而清晰的改动
 - 如果改动会影响 API、数据结构或运行方式，请先开 issue 说明
 
 English:
-- Please read [README.md](/Users/fainal/Documents/GitHub/CodexRemote/README.md) and [docs/operations.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/operations.md) first
+- Please read [README.md](/Users/fainal/Documents/GitHub/findeck/README.md) and [docs/operations.md](/Users/fainal/Documents/GitHub/findeck/docs/operations.md) first
 - Prefer small and focused changes
 - If your change affects APIs, storage, or runtime behavior, please open an issue first
 
@@ -21,16 +21,16 @@ From the repository root / 在仓库根目录执行:
 
 ```bash
 npm install
-npm run build --workspace @codexremote/shared
+npm run build --workspace @findeck/shared
 ```
 
 Common checks / 常用检查:
 
 ```bash
-npm test --workspace @codexremote/server
-npm test --workspace @codexremote/web
-npm run build --workspace @codexremote/server
-npm run build --workspace @codexremote/web
+npm test --workspace @findeck/server
+npm test --workspace @findeck/web
+npm run build --workspace @findeck/server
+npm run build --workspace @findeck/web
 cd apps/android && ./gradlew assembleDebug
 ```
 

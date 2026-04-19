@@ -4,7 +4,7 @@ const nextConfig = {
   // In production the web app sits behind the same origin or a reverse proxy.
   async rewrites() {
     const backendUrl =
-      process.env.CODEXREMOTE_API_URL ?? "http://localhost:31807";
+      process.env.FINDECK_API_URL ?? "http://localhost:31807";
     return [
       {
         source: "/api/:path*",

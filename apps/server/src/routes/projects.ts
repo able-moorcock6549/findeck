@@ -6,7 +6,7 @@ import {
   BrowseProjectsParams,
   BrowseProjectsQuery,
   type BrowseProjectsResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import { LOCAL_HOST_ID } from "../constants.js";
 
 function browseRoot(): string {

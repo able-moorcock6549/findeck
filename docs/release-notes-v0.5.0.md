@@ -80,8 +80,8 @@ This release turns the previous Android-only stabilization work into a cleaner b
 
 ## Related Docs
 
-- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/android-mobile-next-phase-plan-2026-04-18.md)
-- [docs/release-checklist.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/release-checklist.md)
+- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/findeck/docs/android-mobile-next-phase-plan-2026-04-18.md)
+- [docs/release-checklist.md](/Users/fainal/Documents/GitHub/findeck/docs/release-checklist.md)
 
 ## Delivery Artifact
 

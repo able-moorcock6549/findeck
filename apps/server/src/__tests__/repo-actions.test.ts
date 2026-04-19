@@ -12,7 +12,7 @@ import {
   createTestApp,
   loginHelper,
 } from "./helpers.js";
-import { RepoActionResponse } from "@codexremote/shared";
+import { RepoActionResponse } from "@findeck/shared";
 
 const execFileAsync = promisify(execFile);
 
@@ -125,7 +125,7 @@ describe("repo action route", () => {
 
     const branch = await currentBranch(repoDir);
     await runGit(repoDir, ["push", "-u", "origin", branch]);
-    const cloneDir = await mkdtemp(path.join(tmpdir(), "codexremote-git-clone-"));
+    const cloneDir = await mkdtemp(path.join(tmpdir(), "findeck-git-clone-"));
     tempDirs.push(cloneDir);
     await execFileAsync("git", ["clone", remoteDir, cloneDir], { encoding: "utf8" });
     await runGit(cloneDir, ["config", "user.name", "Codex Clone"]);
@@ -212,7 +212,7 @@ describe("repo action route", () => {
   });
 
   it("returns 409 for non-repo sessions", async () => {
-    const plainDir = await mkdtemp(path.join(tmpdir(), "codexremote-repo-actions-"));
+    const plainDir = await mkdtemp(path.join(tmpdir(), "findeck-repo-actions-"));
     tempDirs.push(plainDir);
 
     const adapter = new MockCodexAdapter();
@@ -234,7 +234,7 @@ describe("repo action route", () => {
 });
 
 async function createGitRepo(opts: { dirty?: boolean; withRemote?: boolean } = {}) {
-  const repoDir = await mkdtemp(path.join(tmpdir(), "codexremote-git-actions-"));
+  const repoDir = await mkdtemp(path.join(tmpdir(), "findeck-git-actions-"));
   let remoteDir = "";
 
   await runGit(repoDir, ["init"]);
@@ -246,7 +246,7 @@ async function createGitRepo(opts: { dirty?: boolean; withRemote?: boolean } = {
   await runGit(repoDir, ["commit", "-m", "initial"]);
 
   if (opts.withRemote) {
-    remoteDir = await mkdtemp(path.join(tmpdir(), "codexremote-remote-"));
+    remoteDir = await mkdtemp(path.join(tmpdir(), "findeck-remote-"));
     await runGit(remoteDir, ["init", "--bare"]);
     await runGit(repoDir, ["remote", "add", "origin", remoteDir]);
   }

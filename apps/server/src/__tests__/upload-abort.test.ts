@@ -23,7 +23,7 @@ import {
 } from "./helpers.js";
 import { getDb } from "../db.js";
 
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"]!;
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"]!;
 const ARTIFACTS_DIR = path.join(DATA_ROOT, "artifacts");
 
 /** List files in a directory, returning [] if it doesn't exist. */

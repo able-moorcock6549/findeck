@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>dev.codexremote.web</string>
+  <string>dev.findeck.web</string>
 
   <key>ProgramArguments</key>
   <array>
@@ -13,9 +13,9 @@
 
   <key>EnvironmentVariables</key>
   <dict>
-    <key>CODEXREMOTE_API_URL</key>
-    <string>__CODEXREMOTE_API_URL__</string>
-    <key>CODEXREMOTE_ENV_FILE</key>
+    <key>FINDECK_API_URL</key>
+    <string>__FINDECK_API_URL__</string>
+    <key>FINDECK_ENV_FILE</key>
     <string>__ENV_FILE__</string>
     <key>NODE_BIN</key>
     <string>__NODE_BIN__</string>

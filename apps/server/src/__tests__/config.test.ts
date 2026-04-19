@@ -8,7 +8,7 @@
 import { describe, it, expect } from "vitest";
 import { parseConfig, validateParsedConfig } from "../config.js";
 import { isAllowedMimeType } from "../artifacts/store.js";
-import { DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS } from "@codexremote/shared";
+import { DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS } from "@findeck/shared";
 
 // ── Parsing ────────────────────────────────────────────────────────
 
@@ -37,14 +37,14 @@ describe("config parsing", () => {
     const result = parseConfig({
       PORT: "8080",
       HOST: "0.0.0.0",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "90000",
-      CODEXREMOTE_CONNECTION_TIMEOUT_MS: "15000",
-      CODEXREMOTE_RUN_TIMEOUT_MS: "3600000",
-      CODEXREMOTE_SHUTDOWN_TIMEOUT_MS: "60000",
-      CODEXREMOTE_SSE_IDLE_TIMEOUT_MS: "120000",
-      CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS: "45000",
-      CODEXREMOTE_MAX_OUTPUT_BYTES: "1048576",
-      CODEXREMOTE_SSE_WRITE_BUFFER_MAX: "2097152",
+      FINDECK_REQUEST_TIMEOUT_MS: "90000",
+      FINDECK_CONNECTION_TIMEOUT_MS: "15000",
+      FINDECK_RUN_TIMEOUT_MS: "3600000",
+      FINDECK_SHUTDOWN_TIMEOUT_MS: "60000",
+      FINDECK_SSE_IDLE_TIMEOUT_MS: "120000",
+      FINDECK_UPLOAD_STREAM_TIMEOUT_MS: "45000",
+      FINDECK_MAX_OUTPUT_BYTES: "1048576",
+      FINDECK_SSE_WRITE_BUFFER_MAX: "2097152",
     });
     expect(result.port).toBe(8080);
     expect(result.host).toBe("0.0.0.0");
@@ -62,7 +62,7 @@ describe("config parsing", () => {
   it("respects valid string overrides", () => {
     const result = parseConfig({
       HOST: "192.168.1.100",
-      CODEXREMOTE_DATA_DIR: "/custom/data",
+      FINDECK_DATA_DIR: "/custom/data",
       CODEX_BIN: "/usr/local/bin/codex",
       CODEX_STATE_DIR: "/custom/sessions",
     });
@@ -95,33 +95,33 @@ describe("config parsing", () => {
   });
 
   it("collects issue for non-numeric timeout", () => {
-    const result = parseConfig({ CODEXREMOTE_REQUEST_TIMEOUT_MS: "abc" });
+    const result = parseConfig({ FINDECK_REQUEST_TIMEOUT_MS: "abc" });
     expect(result.requestTimeoutMs).toBe(60_000);
     expect(result.issues).toHaveLength(1);
-    expect(result.issues[0]).toContain("CODEXREMOTE_REQUEST_TIMEOUT_MS");
+    expect(result.issues[0]).toContain("FINDECK_REQUEST_TIMEOUT_MS");
     expect(result.issues[0]).toContain("abc");
   });
 
   it("collects issue for negative timeout", () => {
-    const result = parseConfig({ CODEXREMOTE_RUN_TIMEOUT_MS: "-5" });
+    const result = parseConfig({ FINDECK_RUN_TIMEOUT_MS: "-5" });
     expect(result.runTimeoutMs).toBe(30 * 60 * 1000);
     expect(result.issues).toHaveLength(1);
-    expect(result.issues[0]).toContain("CODEXREMOTE_RUN_TIMEOUT_MS");
+    expect(result.issues[0]).toContain("FINDECK_RUN_TIMEOUT_MS");
   });
 
   it("collects issue for zero value", () => {
-    const result = parseConfig({ CODEXREMOTE_SHUTDOWN_TIMEOUT_MS: "0" });
+    const result = parseConfig({ FINDECK_SHUTDOWN_TIMEOUT_MS: "0" });
     expect(result.shutdownTimeoutMs).toBe(30_000);
     expect(result.issues).toHaveLength(1);
-    expect(result.issues[0]).toContain("CODEXREMOTE_SHUTDOWN_TIMEOUT_MS");
+    expect(result.issues[0]).toContain("FINDECK_SHUTDOWN_TIMEOUT_MS");
   });
 
   it("collects multiple issues for multiple bad values", () => {
     const result = parseConfig({
       PORT: "xyz",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "abc",
-      CODEXREMOTE_RUN_TIMEOUT_MS: "-1",
-      CODEXREMOTE_MAX_OUTPUT_BYTES: "0",
+      FINDECK_REQUEST_TIMEOUT_MS: "abc",
+      FINDECK_RUN_TIMEOUT_MS: "-1",
+      FINDECK_MAX_OUTPUT_BYTES: "0",
     });
     expect(result.issues).toHaveLength(4);
   });
@@ -129,7 +129,7 @@ describe("config parsing", () => {
   it("ignores empty string values (uses defaults)", () => {
     const result = parseConfig({
       PORT: "",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "",
+      FINDECK_REQUEST_TIMEOUT_MS: "",
     });
     expect(result.port).toBe(3000);
     expect(result.requestTimeoutMs).toBe(60_000);
@@ -148,9 +148,9 @@ describe("config validation", () => {
   it("passes when all values are explicitly set and valid", () => {
     const result = parseConfig({
       PORT: "8080",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "90000",
-      CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS: "45000",
-      CODEXREMOTE_RUN_TIMEOUT_MS: "3600000",
+      FINDECK_REQUEST_TIMEOUT_MS: "90000",
+      FINDECK_UPLOAD_STREAM_TIMEOUT_MS: "45000",
+      FINDECK_RUN_TIMEOUT_MS: "3600000",
     });
     expect(() => validateParsedConfig(result)).not.toThrow();
   });
@@ -164,7 +164,7 @@ describe("config validation", () => {
   it("throws listing all issues in one message", () => {
     const result = parseConfig({
       PORT: "abc",
-      CODEXREMOTE_RUN_TIMEOUT_MS: "xyz",
+      FINDECK_RUN_TIMEOUT_MS: "xyz",
     });
     expect(result.issues).toHaveLength(2);
     try {
@@ -173,33 +173,33 @@ describe("config validation", () => {
     } catch (err) {
       const msg = (err as Error).message;
       expect(msg).toContain("PORT");
-      expect(msg).toContain("CODEXREMOTE_RUN_TIMEOUT_MS");
+      expect(msg).toContain("FINDECK_RUN_TIMEOUT_MS");
     }
   });
 
   it("throws when upload timeout >= request timeout", () => {
     const result = parseConfig({
-      CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS: "90000",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "60000",
+      FINDECK_UPLOAD_STREAM_TIMEOUT_MS: "90000",
+      FINDECK_REQUEST_TIMEOUT_MS: "60000",
     });
     expect(result.issues).toEqual([]);
     expect(() => validateParsedConfig(result)).toThrow(
-      "CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS",
+      "FINDECK_UPLOAD_STREAM_TIMEOUT_MS",
     );
   });
 
   it("throws when upload timeout equals request timeout", () => {
     const result = parseConfig({
-      CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS: "60000",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "60000",
+      FINDECK_UPLOAD_STREAM_TIMEOUT_MS: "60000",
+      FINDECK_REQUEST_TIMEOUT_MS: "60000",
     });
     expect(() => validateParsedConfig(result)).toThrow("must be less than");
   });
 
   it("passes when upload timeout < request timeout", () => {
     const result = parseConfig({
-      CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS: "30000",
-      CODEXREMOTE_REQUEST_TIMEOUT_MS: "60000",
+      FINDECK_UPLOAD_STREAM_TIMEOUT_MS: "30000",
+      FINDECK_REQUEST_TIMEOUT_MS: "60000",
     });
     expect(() => validateParsedConfig(result)).not.toThrow();
   });
@@ -216,7 +216,7 @@ describe("config — allowed upload MIME patterns", () => {
   });
 
   it("uses defaults when env var is empty", () => {
-    const result = parseConfig({ CODEXREMOTE_ALLOWED_UPLOAD_TYPES: "" });
+    const result = parseConfig({ FINDECK_ALLOWED_UPLOAD_TYPES: "" });
     expect(result.allowedUploadMimePatterns).toEqual(
       DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS,
     );
@@ -224,7 +224,7 @@ describe("config — allowed upload MIME patterns", () => {
 
   it("merges operator additions with defaults", () => {
     const result = parseConfig({
-      CODEXREMOTE_ALLOWED_UPLOAD_TYPES:
+      FINDECK_ALLOWED_UPLOAD_TYPES:
         "application/x-custom, video/mp4",
     });
     expect(result.allowedUploadMimePatterns).toContain("image/*");
@@ -234,7 +234,7 @@ describe("config — allowed upload MIME patterns", () => {
 
   it("deduplicates patterns that overlap with defaults", () => {
     const result = parseConfig({
-      CODEXREMOTE_ALLOWED_UPLOAD_TYPES: "image/*, application/pdf",
+      FINDECK_ALLOWED_UPLOAD_TYPES: "image/*, application/pdf",
     });
     const count = result.allowedUploadMimePatterns.filter(
       (p) => p === "image/*",
@@ -244,7 +244,7 @@ describe("config — allowed upload MIME patterns", () => {
 
   it("strips whitespace from entries", () => {
     const result = parseConfig({
-      CODEXREMOTE_ALLOWED_UPLOAD_TYPES: "  video/mp4 , audio/mpeg  ",
+      FINDECK_ALLOWED_UPLOAD_TYPES: "  video/mp4 , audio/mpeg  ",
     });
     expect(result.allowedUploadMimePatterns).toContain("video/mp4");
     expect(result.allowedUploadMimePatterns).toContain("audio/mpeg");
@@ -252,7 +252,7 @@ describe("config — allowed upload MIME patterns", () => {
 
   it("ignores empty entries from trailing commas", () => {
     const result = parseConfig({
-      CODEXREMOTE_ALLOWED_UPLOAD_TYPES: "video/mp4,,",
+      FINDECK_ALLOWED_UPLOAD_TYPES: "video/mp4,,",
     });
     const empties = result.allowedUploadMimePatterns.filter(
       (p) => p.length === 0,

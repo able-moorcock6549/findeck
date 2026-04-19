@@ -1,4 +1,4 @@
-// ── Types (mirrors @codexremote/shared — kept local to avoid build coupling) ──
+// ── Types (mirrors @findeck/shared — kept local to avoid build coupling) ──
 
 export interface Session {
   id: string;
@@ -138,11 +138,11 @@ export interface InboxItem {
 
 // ── Token persistence ──────────────────────────────────────────────
 
-const TOKEN_KEY = "codexremote_token";
-const EXPIRES_KEY = "codexremote_token_expires";
-const DRAFT_PROJECTS_KEY = "codexremote_draft_projects";
-const ACTIVE_SESSION_KEY = "codexremote_active_session";
-const SHELL_DATA_EVENT = "codexremote-shell-data-changed";
+const TOKEN_KEY = "findeck_token";
+const EXPIRES_KEY = "findeck_token_expires";
+const DRAFT_PROJECTS_KEY = "findeck_draft_projects";
+const ACTIVE_SESSION_KEY = "findeck_active_session";
+const SHELL_DATA_EVENT = "findeck-shell-data-changed";
 const SESSION_BOOTSTRAP_CACHE_TTL_MS = 15_000;
 const SESSION_TRANSITION_TTL_MS = 15_000;
 const sessionBootstrapCache = new Map<string, SessionBootstrapPayload>();

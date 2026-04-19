@@ -17,7 +17,22 @@
 
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS } from "@codexremote/shared";
+import { DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS } from "@findeck/shared";
+
+function withLegacyCompat(
+  env: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const next = { ...env };
+  for (const [key, value] of Object.entries(env)) {
+    if (!key.startsWith("CODEXREMOTE_") || value === undefined) continue;
+    const suffix = key.slice("CODEXREMOTE_".length);
+    const findeckKey = `FINDECK_${suffix}`;
+    if (next[findeckKey] === undefined || next[findeckKey] === "") {
+      next[findeckKey] = value;
+    }
+  }
+  return next;
+}
 
 // ── Parse result type ────────────────────────────────────────────────
 
@@ -80,7 +95,7 @@ function parsePort(
 }
 
 /**
- * Parse CODEXREMOTE_ALLOWED_UPLOAD_TYPES — a comma-separated list of
+ * Parse FINDECK_ALLOWED_UPLOAD_TYPES — a comma-separated list of
  * additional MIME patterns appended to the built-in defaults.
  *
  * Empty/whitespace-only entries are silently dropped.
@@ -88,7 +103,7 @@ function parsePort(
 function parseAllowedMimePatterns(
   env: Record<string, string | undefined>,
 ): readonly string[] {
-  const raw = env["CODEXREMOTE_ALLOWED_UPLOAD_TYPES"];
+  const raw = env["FINDECK_ALLOWED_UPLOAD_TYPES"];
   if (!raw || raw.trim() === "") return DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS;
 
   const extras = raw
@@ -117,6 +132,7 @@ export function parseConfig(
     string | undefined
   >,
 ): ConfigParseResult {
+  env = withLegacyCompat(env);
   const issues: string[] = [];
 
   return {
@@ -124,81 +140,81 @@ export function parseConfig(
     host: env["HOST"] ?? "127.0.0.1",
     requestTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_REQUEST_TIMEOUT_MS",
+      "FINDECK_REQUEST_TIMEOUT_MS",
       60_000,
       issues,
     ),
     connectionTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_CONNECTION_TIMEOUT_MS",
+      "FINDECK_CONNECTION_TIMEOUT_MS",
       30_000,
       issues,
     ),
     runTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_RUN_TIMEOUT_MS",
+      "FINDECK_RUN_TIMEOUT_MS",
       30 * 60 * 1000,
       issues,
     ),
     shutdownTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_SHUTDOWN_TIMEOUT_MS",
+      "FINDECK_SHUTDOWN_TIMEOUT_MS",
       30_000,
       issues,
     ),
     sseIdleTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_SSE_IDLE_TIMEOUT_MS",
+      "FINDECK_SSE_IDLE_TIMEOUT_MS",
       5 * 60 * 1000,
       issues,
     ),
     uploadStreamTimeoutMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS",
+      "FINDECK_UPLOAD_STREAM_TIMEOUT_MS",
       30_000,
       issues,
     ),
     maxOutputBytes: parsePositiveInt(
       env,
-      "CODEXREMOTE_MAX_OUTPUT_BYTES",
+      "FINDECK_MAX_OUTPUT_BYTES",
       512 * 1024,
       issues,
     ),
     sseWriteBufferMax: parsePositiveInt(
       env,
-      "CODEXREMOTE_SSE_WRITE_BUFFER_MAX",
+      "FINDECK_SSE_WRITE_BUFFER_MAX",
       1024 * 1024,
       issues,
     ),
     globalRateLimitMax: parsePositiveInt(
       env,
-      "CODEXREMOTE_RATE_LIMIT_MAX",
+      "FINDECK_RATE_LIMIT_MAX",
       100,
       issues,
     ),
     globalRateLimitWindowMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_RATE_LIMIT_WINDOW_MS",
+      "FINDECK_RATE_LIMIT_WINDOW_MS",
       60_000,
       issues,
     ),
     authRateLimitMax: parsePositiveInt(
       env,
-      "CODEXREMOTE_AUTH_RATE_LIMIT_MAX",
+      "FINDECK_AUTH_RATE_LIMIT_MAX",
       5,
       issues,
     ),
     authRateLimitWindowMs: parsePositiveInt(
       env,
-      "CODEXREMOTE_AUTH_RATE_LIMIT_WINDOW_MS",
+      "FINDECK_AUTH_RATE_LIMIT_WINDOW_MS",
       15 * 60 * 1000,
       issues,
     ),
-    dataDir: env["CODEXREMOTE_DATA_DIR"] ?? "data",
+    dataDir: env["FINDECK_DATA_DIR"] ?? "data",
     codexBin: env["CODEX_BIN"] ?? "codex",
     minFreeDiskBytes: parsePositiveInt(
       env,
-      "CODEXREMOTE_MIN_FREE_DISK_BYTES",
+      "FINDECK_MIN_FREE_DISK_BYTES",
       100 * 1024 * 1024,
       issues,
     ),
@@ -239,14 +255,14 @@ export const CONNECTION_TIMEOUT_MS: number = _parsed.connectionTimeoutMs;
 
 /**
  * Maximum wall-clock time a single run is allowed before the watchdog
- * force-kills it.  Configurable via CODEXREMOTE_RUN_TIMEOUT_MS.
+ * force-kills it.  Configurable via FINDECK_RUN_TIMEOUT_MS.
  * Default: 30 minutes.
  */
 export const RUN_TIMEOUT_MS: number = _parsed.runTimeoutMs;
 
 /**
  * Maximum wall-clock time the entire shutdown sequence is allowed before
- * a forced exit.  Configurable via CODEXREMOTE_SHUTDOWN_TIMEOUT_MS.
+ * a forced exit.  Configurable via FINDECK_SHUTDOWN_TIMEOUT_MS.
  * Default: 30 seconds.
  */
 export const SHUTDOWN_TIMEOUT_MS: number = _parsed.shutdownTimeoutMs;
@@ -302,7 +318,7 @@ export const MIN_FREE_DISK_BYTES: number = _parsed.minFreeDiskBytes;
 
 /**
  * Effective MIME type allowlist for uploads.  Combines the built-in
- * defaults with any operator additions via CODEXREMOTE_ALLOWED_UPLOAD_TYPES.
+ * defaults with any operator additions via FINDECK_ALLOWED_UPLOAD_TYPES.
  * Used by the upload route to reject disallowed file types with 415.
  */
 export const ALLOWED_UPLOAD_MIME_PATTERNS: readonly string[] =
@@ -327,8 +343,8 @@ export function validateParsedConfig(config: ConfigParseResult): void {
   // timeout so the route-level timer is the effective bound.
   if (config.uploadStreamTimeoutMs >= config.requestTimeoutMs) {
     throw new Error(
-      `CODEXREMOTE_UPLOAD_STREAM_TIMEOUT_MS (${config.uploadStreamTimeoutMs}ms) must be ` +
-        `less than CODEXREMOTE_REQUEST_TIMEOUT_MS (${config.requestTimeoutMs}ms). ` +
+      `FINDECK_UPLOAD_STREAM_TIMEOUT_MS (${config.uploadStreamTimeoutMs}ms) must be ` +
+        `less than FINDECK_REQUEST_TIMEOUT_MS (${config.requestTimeoutMs}ms). ` +
         `Otherwise the global request timeout kills uploads before the ` +
         `stall timer can act.`,
     );

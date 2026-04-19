@@ -5,7 +5,7 @@
  * initial migration (001_initial_schema.sql).  Tokens now survive server
  * restarts, matching the Phase 1 durability requirements from §6.2.
  *
- * CODEXREMOTE_PASSWORD must be set as an environment variable —
+ * FINDECK_PASSWORD must be set as an environment variable —
  * the server refuses to start without it so there is never a
  * predictable default credential.
  */
@@ -28,12 +28,12 @@ const TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
  * every login attempt.
  */
 export function getAppPassword(): string {
-  const pw = process.env["CODEXREMOTE_PASSWORD"];
+  const pw = process.env["FINDECK_PASSWORD"] ?? process.env["CODEXREMOTE_PASSWORD"];
   if (!pw) {
     throw new Error(
-      "CODEXREMOTE_PASSWORD is not set. " +
+      "FINDECK_PASSWORD is not set. " +
         "Export it before starting the server: " +
-        "export CODEXREMOTE_PASSWORD=<your-password>",
+        "export FINDECK_PASSWORD=<your-password>",
     );
   }
   return pw;

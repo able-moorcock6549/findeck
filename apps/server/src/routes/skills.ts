@@ -8,7 +8,7 @@ import {
   type ListSkillsResponse,
   type SkillEntry,
   type SkillSource,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import { LOCAL_HOST_ID } from "../constants.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL("../../../../", import.meta.url)));

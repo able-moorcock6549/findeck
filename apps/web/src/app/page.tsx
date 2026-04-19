@@ -25,7 +25,7 @@ export default function Home() {
           padding: 24,
           overflow: "hidden",
         }}
-        aria-label="Preparing CodexRemote"
+        aria-label="Preparing findeck"
       >
         <div
           style={{
@@ -52,7 +52,7 @@ export default function Home() {
                   marginBottom: 6,
                 }}
               >
-                Precision Console
+                Console
               </div>
               <h1 style={{ fontSize: 28, lineHeight: 1.05, marginBottom: 8 }}>
                 Preparing secure workspace

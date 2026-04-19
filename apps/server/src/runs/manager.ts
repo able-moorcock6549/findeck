@@ -28,7 +28,7 @@ import type {
   CodexApprovalDecision,
   CodexApprovalRequest,
 } from "../codex/index.js";
-import type { Run } from "@codexremote/shared";
+import type { Run } from "@findeck/shared";
 import { getDb } from "../db.js";
 import { ensureSessionRow } from "../sessions/ensure.js";
 import { RUN_TIMEOUT_MS } from "../config.js";

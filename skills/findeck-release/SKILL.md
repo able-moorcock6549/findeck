@@ -1,5 +1,5 @@
 ---
-name: codexremote-release
+name: findeck-release
 description: Validate and publish the findeck GitHub repository release flow. Use when the user wants to 一键发布仓库, 发布版本到 GitHub, push main, create/update GitHub release, or run the findeck repo release flow. Do not use this skill for APK SMB sync; that belongs to apk-smb-sync.
 ---
 
@@ -37,8 +37,8 @@ Release notes file:
 Run these checks before publishing:
 
 ```bash
-npm run typecheck --workspace @codexremote/web
-npm run build --workspace @codexremote/web
+npm run typecheck --workspace @findeck/web
+npm run build --workspace @findeck/web
 cd apps/android && ./gradlew :app:compileDebugKotlin
 ```
 
@@ -47,7 +47,7 @@ cd apps/android && ./gradlew :app:compileDebugKotlin
 Run:
 
 ```bash
-./skills/codexremote-release/scripts/release_codexremote.sh
+./skills/findeck-release/scripts/release_findeck.sh
 ```
 
 This command:
@@ -65,10 +65,10 @@ This command:
 Useful overrides:
 
 ```bash
-./skills/codexremote-release/scripts/release_codexremote.sh --dry-run
-./skills/codexremote-release/scripts/release_codexremote.sh --skip-release
-./skills/codexremote-release/scripts/release_codexremote.sh --skip-apk
-./skills/codexremote-release/scripts/release_codexremote.sh --notes-file docs/release-notes-v0.1.4.md
+./skills/findeck-release/scripts/release_findeck.sh --dry-run
+./skills/findeck-release/scripts/release_findeck.sh --skip-release
+./skills/findeck-release/scripts/release_findeck.sh --skip-apk
+./skills/findeck-release/scripts/release_findeck.sh --notes-file docs/release-notes-v0.1.4.md
 ```
 
 ## Guardrails

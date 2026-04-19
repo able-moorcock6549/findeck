@@ -10,7 +10,7 @@ import {
   type LoginResponse,
   type LogoutResponse,
   type GetAuthSessionResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import {
   getAppPassword,
   createToken,
@@ -79,7 +79,7 @@ function createSlidingWindowLimiter(
 /**
  * Auth route group — POST /api/auth/login, POST /api/auth/logout, GET /api/auth/session
  *
- * Password is checked against the CODEXREMOTE_PASSWORD env var.
+ * Password is checked against the FINDECK_PASSWORD env var.
  * Tokens are persisted in SQLite via the auth store.
  *
  * The login endpoint has a strict per-IP rate limit (preHandler) that
@@ -184,7 +184,7 @@ export function authRoutes(options: AuthRouteOptions) {
           return reply.status(400).send({ error: "New password must be different" });
         }
 
-        persistCodexRemotePassword(newPassword);
+        persistFindeckPassword(newPassword);
         scheduleServerRestart();
 
         const body: ChangePasswordResponse = {
@@ -219,24 +219,28 @@ export function authRoutes(options: AuthRouteOptions) {
 }
 
 const REPO_ROOT = resolve(fileURLToPath(new URL("../../../../", import.meta.url)));
-const ENV_FILE = process.env["CODEXREMOTE_ENV_FILE"] || resolve(REPO_ROOT, ".env.local");
+const ENV_FILE =
+  process.env["FINDECK_ENV_FILE"] ||
+  process.env["CODEXREMOTE_ENV_FILE"] ||
+  resolve(REPO_ROOT, ".env.local");
 const SERVER_PLIST = resolve(
   process.env["HOME"] || "",
-  "Library/LaunchAgents/dev.codexremote.server.plist",
+  "Library/LaunchAgents/dev.findeck.server.plist",
 );
 
-function persistCodexRemotePassword(newPassword: string): void {
+function persistFindeckPassword(newPassword: string): void {
   const envDir = dirname(ENV_FILE);
   mkdirSync(envDir, { recursive: true });
 
   const existing = existsSync(ENV_FILE) ? readFileSync(ENV_FILE, "utf8") : "";
-  const nextEnv = upsertEnvLine(existing, "CODEXREMOTE_PASSWORD", newPassword);
+  const withFindeck = upsertEnvLine(existing, "FINDECK_PASSWORD", newPassword);
+  const nextEnv = upsertEnvLine(withFindeck, "CODEXREMOTE_PASSWORD", newPassword);
   writeFileSync(ENV_FILE, nextEnv, "utf8");
 
   if (existsSync(SERVER_PLIST)) {
     try {
       const updatedPlist = readFileSync(SERVER_PLIST, "utf8").replace(
-        /(<key>CODEXREMOTE_PASSWORD<\/key>\s*<string>)([^<]*)(<\/string>)/,
+        /(<key>FINDECK_PASSWORD<\/key>\s*<string>)([^<]*)(<\/string>)/,
         (_, prefix: string, _old: string, suffix: string) =>
           `${prefix}${escapeXml(newPassword)}${suffix}`,
       );

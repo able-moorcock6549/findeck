@@ -6,7 +6,7 @@
 
 ## Highlights
 
-- Introduced the `Precision Console` visual direction across the product
+- Introduced the `Console` visual direction across the product
 - Upgraded web login, session navigation, session detail, and composer surfaces
 - Upgraded Android login, session list, session detail timeline, and composer surfaces
 - Unified empty, loading, upload, and error feedback into a more consistent treatment
@@ -21,10 +21,10 @@
 
 ## Validation
 
-- `npm run typecheck --workspace @codexremote/web`
-- `npm run build --workspace @codexremote/web`
+- `npm run typecheck --workspace @findeck/web`
+- `npm run build --workspace @findeck/web`
 - `./gradlew :app:compileDebugKotlin`
 
 ## Delivery Artifact
 
-- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.1.4.apk`
+- Dated APK output: `YYYY-MM-DD_findeck_v0.1.4.apk`

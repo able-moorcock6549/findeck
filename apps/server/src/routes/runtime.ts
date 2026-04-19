@@ -3,7 +3,7 @@ import {
   RuntimeCatalogResponse,
   RuntimeParams,
   RuntimeUsageResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import {
   normalizeRuntimeBridgeError,
   readRuntimeCatalog,

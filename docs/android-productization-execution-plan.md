@@ -8,7 +8,7 @@ This document is the execution plan for the next Android-focused milestone after
 
 ## 目标
 
-把 `CodexRemote` Android 客户端从“已经可用的远程控制台”推进成“更完整的手机端 Codex 工作台”，重点补齐以下七类能力：
+把 `findeck` Android 客户端从“已经可用的远程控制台”推进成“更完整的手机端 Codex 工作台”，重点补齐以下七类能力：
 
 1. QR / 配对码接入 + 可信主机自动重连
 2. 会话搜索 + 归档列表 + 更显眼的导航入口
@@ -27,7 +27,7 @@ This document is the execution plan for the next Android-focused milestone after
 - Composer 保持紧凑，不做成臃肿控制台；新增能力优先进入现有按钮带、bottom sheet、popover、轻量建议面板。
 - 维持当前按钮菜单风格，不直接照搬 `remodex` 的 iOS 视觉结构。
 - 状态呈现尽量简洁，优先使用状态灯、单行状态条、短 banner，不上大段说明文字。
-- 保持 `Precision Console` 方向，避免切换到另一套品牌风格。
+- 保持 `Console` 方向，避免切换到另一套品牌风格。
 - 保留当前多服务器 / 后端管理模型，不为了 QR 配对把产品退化成“只能连一个主机”的心智。
 
 ## 术语澄清
@@ -94,23 +94,23 @@ This document is the execution plan for the next Android-focused milestone after
 - 新增“生成配对 payload / 配对码”的服务端或脚本能力
 - 新增“可信主机登记 / 查询 / 失效”接口
 - 新增面向 Android 的“恢复连接候选信息”接口
-- 让现有 `npm run codexremote -- up` 能在启动后输出或暴露可扫描的配对信息
+- 让现有 `npm run findeck -- up` 能在启动后输出或暴露可扫描的配对信息
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/splash/SplashScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/servers/ServerListScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/servers/AddServerScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/login/LoginScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/settings/ServerSettingsScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/navigation/AppNavHost.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/splash/SplashScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/servers/ServerListScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/servers/AddServerScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/login/LoginScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/settings/ServerSettingsScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/navigation/AppNavHost.kt`
 - 新增 `pairing` 相关 viewmodel / screen / scanner
 
 #### 服务端文件范围
 
 - `apps/server/src/routes/*` 新增配对相关 route
 - `packages/shared/src/api/*` 新增共享 schema
-- `scripts/codexremote.sh`
+- `scripts/findeck.sh`
 - `docs/operations.md`
 - `README.md`
 
@@ -149,8 +149,8 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionListScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/navigation/AppNavHost.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionListScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/navigation/AppNavHost.kt`
 - 新增 `ArchivedSessionsScreen.kt`
 - 可能拆分新的 `SessionListToolbar` / `SessionSearchField`
 
@@ -158,7 +158,7 @@ This document is the execution plan for the next Android-focused milestone after
 
 - `apps/server/src/routes/sessions.ts`
 - `packages/shared/src/api/sessions.ts`
-- `apps/android/app/src/main/java/dev/codexremote/android/data/network/ApiClient.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/data/network/ApiClient.kt`
 
 #### 验收标准
 
@@ -220,11 +220,11 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/ComposerBar.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailViewModel.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/data/network/ApiClient.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/data/model/*`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/ComposerBar.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailViewModel.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/data/network/ApiClient.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/data/model/*`
 - 新增 `ComposerCommandPanel` / `ComposerMentionPanel` / `RuntimeSheet`
 
 #### 服务端文件范围
@@ -280,11 +280,11 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailViewModel.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionControlStrip.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/MicroStatusRow.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/TimelineStatusCards.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailViewModel.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionControlStrip.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/MicroStatusRow.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/TimelineStatusCards.kt`
 - `apps/android/app/src/main/res/values/strings_session_detail.xml`
 - `apps/android/app/src/main/res/values-en/strings_session_detail.xml`
 
@@ -316,10 +316,10 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionListScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/inbox/InboxScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/settings/ServerSettingsScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionListScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/inbox/InboxScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/settings/ServerSettingsScreen.kt`
 - 可能新增 `ui/feedback/*`
 
 #### 验收标准
@@ -356,10 +356,10 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### Android 文件范围
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/settings/ServerSettingsScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/settings/ServerSettingsScreen.kt`
 - 新增 `SettingsScreen` 或将当前 server settings 升级为更完整的设置页
-- `apps/android/app/src/main/java/dev/codexremote/android/navigation/AppNavHost.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/theme/*`
+- `apps/android/app/src/main/java/dev/findeck/android/navigation/AppNavHost.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/theme/*`
 
 #### 后端联动
 
@@ -390,7 +390,7 @@ This document is the execution plan for the next Android-focused milestone after
 
 第一段：
 
-- 强化 repo 内 `npm run codexremote -- up`
+- 强化 repo 内 `npm run findeck -- up`
 - 补齐 `.env.local` 引导
 - 补齐缺失依赖检查
 - 启动后输出 Web URL、API URL、pairing 信息
@@ -402,12 +402,12 @@ This document is the execution plan for the next Android-focused milestone after
 
 #### 文件范围
 
-- `scripts/codexremote.sh`
+- `scripts/findeck.sh`
 - `scripts/install-launchd.sh`
 - `scripts/README.md`
 - `docs/operations.md`
 - `README.md`
-- 可能新增 `scripts/bootstrap-codexremote.sh`
+- 可能新增 `scripts/bootstrap-findeck.sh`
 
 #### 验收标准
 

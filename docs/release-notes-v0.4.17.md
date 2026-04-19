@@ -48,7 +48,7 @@ After this release, Android should default to maintenance, compatibility, and sm
 
 ## Related Docs
 
-- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/android-mobile-next-phase-plan-2026-04-18.md)
+- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/findeck/docs/android-mobile-next-phase-plan-2026-04-18.md)
 
 ## Delivery Artifact
 

@@ -91,7 +91,7 @@ export const JSON_BODY_LIMIT_BYTES = 512 * 1024; // 512 KB
  * code, logs, archives) while blocking executable and package types
  * that have no legitimate use in the upload flow.
  *
- * Operators can extend via CODEXREMOTE_ALLOWED_UPLOAD_TYPES at
+ * Operators can extend via FINDECK_ALLOWED_UPLOAD_TYPES at
  * startup.
  */
 export const DEFAULT_ALLOWED_UPLOAD_MIME_PATTERNS: readonly string[] = [

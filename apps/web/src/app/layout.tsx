@@ -4,7 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { AppShellClient } from "./app-shell-client";
 
-const THEME_STORAGE_KEY = "codexremote_theme_pref";
+const THEME_STORAGE_KEY = "findeck_theme_pref";
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodexRemote",
+  title: "findeck",
   description: "Remote control for Codex CLI",
 };
 

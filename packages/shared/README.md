@@ -1,7 +1,7 @@
 # packages/shared
 
-中文：CodexRemote 的共享契约与 schema 包。  
-English: Shared contracts and schemas package for CodexRemote.
+中文：findeck 的共享契约与 schema 包。  
+English: Shared contracts and schemas package for findeck.
 
 ## Contents / 内容
 

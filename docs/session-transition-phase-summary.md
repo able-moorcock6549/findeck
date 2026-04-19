@@ -6,9 +6,9 @@
 
 关联文档：
 
-- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/paseo-gap-improvement-plan.md)
-- [docs/session-transition-release-summary.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-release-summary.md)
-- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-acceptance-checklist.md)
+- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/findeck/docs/paseo-gap-improvement-plan.md)
+- [docs/session-transition-release-summary.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-release-summary.md)
+- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-acceptance-checklist.md)
 
 ## 收口口径
 
@@ -92,7 +92,7 @@ Phase 4 还没有完全收口的点主要是：
 
 - “导航与状态设计系统已经完全定型”
 - “Web 与 Android 的所有状态组件已经彻底统一”
-- “整份 Precision Console 视觉语言已经全部收口完毕”
+- “整份 Console 视觉语言已经全部收口完毕”
 
 ### 仍未完成的部分
 

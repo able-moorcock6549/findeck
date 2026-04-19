@@ -2,7 +2,7 @@
  * SQLite database initialisation and access.
  *
  * Opens (or creates) a `better-sqlite3` database at the path derived from
- * the CODEXREMOTE_DATA_DIR environment variable (default: `data/`).
+ * the FINDECK_DATA_DIR environment variable (default: `data/`).
  *
  * Migrations are applied eagerly on first call to {@link initDb} using a
  * simple `user_version`-based scheme that reads sequential `.sql` files
@@ -20,8 +20,16 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"] ?? "data";
-const DB_PATH = path.join(DATA_ROOT, "codexremote.db");
+const DATA_ROOT =
+  process.env["FINDECK_DATA_DIR"] ??
+  process.env["CODEXREMOTE_DATA_DIR"] ??
+  "data";
+const NEW_DB_PATH = path.join(DATA_ROOT, "findeck.db");
+const LEGACY_DB_PATH = path.join(DATA_ROOT, "codexremote.db");
+const DB_PATH =
+  fs.existsSync(NEW_DB_PATH) || !fs.existsSync(LEGACY_DB_PATH)
+    ? NEW_DB_PATH
+    : LEGACY_DB_PATH;
 
 /** Folder that contains numbered `.sql` migration files. */
 const MIGRATIONS_DIR = path.resolve(__dirname, "..", "db", "migrations");

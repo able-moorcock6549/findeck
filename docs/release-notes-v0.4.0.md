@@ -2,7 +2,7 @@
 
 ## Summary
 
-`v0.4.0` is the release where CodexRemote Android becomes much closer to a deliberate mobile product: trusted reconnect is now real, archived-session management is first-class, the composer can reference real files and skills, and settings have expanded beyond password changes into a usable preference surface.
+`v0.4.0` is the release where findeck Android becomes much closer to a deliberate mobile product: trusted reconnect is now real, archived-session management is first-class, the composer can reference real files and skills, and settings have expanded beyond password changes into a usable preference surface.
 
 ## Highlights
 
@@ -23,11 +23,11 @@
 
 ## Validation
 
-- `npm run build --workspace @codexremote/shared`
-- `npm run build --workspace @codexremote/server`
-- `npm run test --workspace @codexremote/server -- src/__tests__/pairing-store.test.ts src/__tests__/pairing.test.ts src/__tests__/session-archive.test.ts src/__tests__/composer-ux.test.ts`
+- `npm run build --workspace @findeck/shared`
+- `npm run build --workspace @findeck/server`
+- `npm run test --workspace @findeck/server -- src/__tests__/pairing-store.test.ts src/__tests__/pairing.test.ts src/__tests__/session-archive.test.ts src/__tests__/composer-ux.test.ts`
 - `cd apps/android && ./gradlew :app:compileDebugKotlin`
-- `cd apps/android && ./gradlew :app:testDebugUnitTest --tests dev.codexremote.android.ui.sessions.ComposerSuggestionsTest`
+- `cd apps/android && ./gradlew :app:testDebugUnitTest --tests dev.findeck.android.ui.sessions.ComposerSuggestionsTest`
 - `cd apps/android && ./gradlew :app:assembleDebug`
 
 ## Known Follow-up
@@ -37,4 +37,4 @@
 
 ## Delivery Artifact
 
-- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.4.0.apk`
+- Dated APK output: `YYYY-MM-DD_findeck_v0.4.0.apk`

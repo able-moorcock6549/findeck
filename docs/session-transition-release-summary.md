@@ -49,7 +49,7 @@ The current release note should not claim:
 
 - deep long-history virtualization is fully complete
 - all long-history rendering bottlenecks are resolved
-- the full Precision Console state-component system is finished
+- the full Console state-component system is finished
 - all cross-platform visual and wording differences are fully eliminated
 - final acceptance is complete without the manual checklist pass
 
@@ -63,6 +63,6 @@ The remaining risks that should stay visible in the final write-up are:
 
 ## Related Docs
 
-- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/paseo-gap-improvement-plan.md)
-- [docs/session-transition-phase-summary.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-phase-summary.md)
-- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-acceptance-checklist.md)
+- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/findeck/docs/paseo-gap-improvement-plan.md)
+- [docs/session-transition-phase-summary.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-phase-summary.md)
+- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-acceptance-checklist.md)

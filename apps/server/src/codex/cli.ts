@@ -341,7 +341,7 @@ function isVisibleSession(cwd: string | null): boolean {
     normalized.startsWith("/private/tmp/") ||
     normalized.startsWith("/private/var/folders/") ||
     base.startsWith("tmp.") ||
-    base.startsWith("codexremote-smoke")
+    base.startsWith("findeck-smoke")
   );
 }
 
@@ -1871,7 +1871,7 @@ export async function spawnCodexAppServerNewThread(
       params: {
         protocolVersion: APP_SERVER_PROTOCOL_VERSION,
         clientInfo: {
-          name: "CodexRemote",
+          name: "findeck",
           version: "0.0.0",
         },
         capabilities: {
@@ -2183,7 +2183,7 @@ export async function spawnCodexAppServerResumeRun(
       params: {
         protocolVersion: APP_SERVER_PROTOCOL_VERSION,
         clientInfo: {
-          name: "CodexRemote",
+          name: "findeck",
           version: "0.0.0",
         },
         capabilities: {
@@ -2384,7 +2384,7 @@ export async function archiveCodexAppServerThread(
       params: {
         protocolVersion: APP_SERVER_PROTOCOL_VERSION,
         clientInfo: {
-          name: "CodexRemote",
+          name: "findeck",
           version: "0.0.0",
         },
         capabilities: {

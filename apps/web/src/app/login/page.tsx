@@ -81,7 +81,7 @@ export default function LoginPage() {
                   marginBottom: 8,
                 }}
               >
-                Precision Console
+                Console
               </div>
               <h1 id="login-hero-title" style={{ fontSize: 34, lineHeight: 1.02, marginBottom: 10 }}>
                 Unlock a secure remote workspace
@@ -93,7 +93,7 @@ export default function LoginPage() {
                   fontSize: 16,
                 }}
               >
-                CodexRemote turns the browser into a calm command surface for
+                findeck turns the browser into a calm command surface for
                 sessions, inbox review, and live run supervision.
               </p>
             </div>

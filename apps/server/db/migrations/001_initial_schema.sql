@@ -1,4 +1,4 @@
--- CodexRemote initial SQLite schema
+-- findeck initial SQLite schema
 -- Baseline single-host schema with room for future multi-host expansion
 
 -- ── Hosts ───────────────────────────────────────────────────────────

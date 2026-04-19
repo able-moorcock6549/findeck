@@ -6,7 +6,7 @@ import {
   PairingClaimResponse,
   TrustedReconnectRequest,
   TrustedReconnectResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import {
   claimPairingCode,
   createPairingCode,

@@ -1,7 +1,7 @@
 # infra
 
-中文：CodexRemote 的基础设施模板目录。  
-English: Infrastructure template directory for CodexRemote.
+中文：findeck 的基础设施模板目录。  
+English: Infrastructure template directory for findeck.
 
 中文：`infra/launchd/` 中保存的是带占位符的 launchd 模板，安装时由 [install-launchd.sh](../scripts/install-launchd.sh) 渲染成真实 plist。  
 English: `infra/launchd/` stores placeholder-based launchd templates, which are rendered into real plist files by [install-launchd.sh](../scripts/install-launchd.sh).

@@ -20,10 +20,10 @@
 
 ## Validation
 
-- `npm run typecheck --workspace @codexremote/web`
-- `npm run build --workspace @codexremote/web`
+- `npm run typecheck --workspace @findeck/web`
+- `npm run build --workspace @findeck/web`
 - `cd apps/android && ./gradlew :app:compileDebugKotlin`
 
 ## Delivery Artifact
 
-- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.2.1.apk`
+- Dated APK output: `YYYY-MM-DD_findeck_v0.2.1.apk`

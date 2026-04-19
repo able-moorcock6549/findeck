@@ -5,7 +5,7 @@ import {
   AttachArtifactRequest,
   type UploadResponse,
   type AttachArtifactResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import { LOCAL_HOST_ID } from "../constants.js";
 import {
   createArtifact,

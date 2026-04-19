@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (password: string) => {
-    await api.login(password, "CodexRemote Web");
+    await api.login(password, "findeck Web");
     setIsAuthenticated(true);
   }, []);
 

@@ -11,7 +11,7 @@ import {
   PendingApprovalDecisionRequest,
   PendingApprovalDecisionResponse,
   type Run,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import { LOCAL_HOST_ID } from "../constants.js";
 import type { CodexAdapter } from "../codex/index.js";
 import type { RunManager } from "../runs/manager.js";

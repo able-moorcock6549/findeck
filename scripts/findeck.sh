@@ -3,17 +3,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-ENV_FILE="${CODEXREMOTE_ENV_FILE:-$REPO_ROOT/.env.local}"
+ENV_FILE="${FINDECK_ENV_FILE:-${CODEXREMOTE_ENV_FILE:-$REPO_ROOT/.env.local}}"
 SERVER_DIST="$REPO_ROOT/apps/server/dist/server.js"
 WEB_BUILD_ID="$REPO_ROOT/apps/web/.next/BUILD_ID"
 WEB_ROUTES_MANIFEST="$REPO_ROOT/apps/web/.next/routes-manifest.json"
 WEB_NEXT_BIN="$REPO_ROOT/node_modules/next/dist/bin/next"
-LOG_DIR="$HOME/Library/Logs/CodexRemote"
+LOG_DIR="$HOME/Library/Logs/findeck"
 NODE_BIN="${NODE_BIN:-$(command -v node)}"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/codexremote.sh <command>
+Usage: ./scripts/findeck.sh <command>
 
 Commands:
   up       Build missing artifacts if needed, then install/start local launchd services
@@ -22,18 +22,18 @@ Commands:
   logs     Tail recent launchd logs
   restart  Restart launchd services
   web      Open the local web console in the default browser
-  doctor   Validate the local CodexRemote environment
+  doctor   Validate the local findeck environment
 EOF
   exit 1
 }
 
 fail() {
-  echo "[codexremote] $*" >&2
+  echo "[findeck] $*" >&2
   exit 1
 }
 
 warn() {
-  echo "[codexremote] $*"
+  echo "[findeck] $*"
 }
 
 open_url() {
@@ -55,14 +55,20 @@ ensure_env_loaded() {
     source "$ENV_FILE"
     set +a
   fi
+  if [[ -z "${FINDECK_PASSWORD:-}" && -n "${CODEXREMOTE_PASSWORD:-}" ]]; then
+    export FINDECK_PASSWORD="${CODEXREMOTE_PASSWORD}"
+  fi
+  if [[ -z "${FINDECK_API_URL:-}" && -n "${CODEXREMOTE_API_URL:-}" ]]; then
+    export FINDECK_API_URL="${CODEXREMOTE_API_URL}"
+  fi
 }
 
 expected_web_api_url() {
   local host_value="${HOST:-0.0.0.0}"
   local port_value="${PORT:-31807}"
 
-  if [[ -n "${CODEXREMOTE_API_URL:-}" ]]; then
-    printf '%s\n' "$CODEXREMOTE_API_URL"
+  if [[ -n "${FINDECK_API_URL:-}" ]]; then
+    printf '%s\n' "$FINDECK_API_URL"
     return 0
   fi
 
@@ -118,17 +124,17 @@ ensure_builds() {
 
   if [[ ! -f "$SERVER_DIST" ]]; then
     warn "Missing server build artifact, running server build..."
-    (cd "$REPO_ROOT" && npm run build --workspace @codexremote/shared && npm run build --workspace @codexremote/server)
+    (cd "$REPO_ROOT" && npm run build --workspace @findeck/shared && npm run build --workspace @findeck/server)
     built_any=1
   fi
 
   if [[ ! -f "$WEB_BUILD_ID" ]]; then
     warn "Missing web build artifact, running web build..."
-    (cd "$REPO_ROOT" && npm run build --workspace @codexremote/web)
+    (cd "$REPO_ROOT" && npm run build --workspace @findeck/web)
     built_any=1
   elif ! web_build_matches_runtime; then
     warn "Web build API target is stale, rebuilding web..."
-    (cd "$REPO_ROOT" && npm run build --workspace @codexremote/web)
+    (cd "$REPO_ROOT" && npm run build --workspace @findeck/web)
     built_any=1
   fi
 
@@ -165,7 +171,7 @@ print_pairing_code() {
   url="${base_url}/api/pairing/code"
 
   if ! wait_for_server; then
-    fail "The local server did not become ready in time. Run ./scripts/codexremote.sh status or logs to inspect it."
+    fail "The local server did not become ready in time. Run ./scripts/findeck.sh status or logs to inspect it."
   fi
 
   response="$(curl -fsS -X POST "$url")" || fail "Could not obtain a pairing code from the local server."
@@ -174,7 +180,7 @@ print_pairing_code() {
     import { readFileSync } from "node:fs";
     const raw = readFileSync(process.stdin.fd, "utf8");
     const data = JSON.parse(raw);
-    console.log("[codexremote] Pairing code ready");
+    console.log("[findeck] Pairing code ready");
     console.log(`code: ${data.code}`);
     console.log(`expiresAt: ${data.expiresAt}`);
     console.log("Android: choose the pairing flow, enter this code, then reconnect later with the saved trusted credentials.");
@@ -184,7 +190,7 @@ print_pairing_code() {
 run_doctor() {
   local issues=0
 
-  echo "== CodexRemote doctor =="
+  echo "== findeck doctor =="
   echo "repo: $REPO_ROOT"
   echo "env:  $ENV_FILE"
   echo
@@ -198,10 +204,10 @@ run_doctor() {
 
   ensure_env_loaded
 
-  if [[ -n "${CODEXREMOTE_PASSWORD:-}" && "${CODEXREMOTE_PASSWORD}" != "change-me" ]]; then
-    echo "[ok] CODEXREMOTE_PASSWORD configured"
+  if [[ -n "${FINDECK_PASSWORD:-}" && "${FINDECK_PASSWORD}" != "change-me" ]]; then
+    echo "[ok] FINDECK_PASSWORD configured"
   else
-    echo "[warn] CODEXREMOTE_PASSWORD missing or still using the placeholder value"
+    echo "[warn] FINDECK_PASSWORD missing or still using the placeholder value"
     issues=1
   fi
 
@@ -227,10 +233,10 @@ run_doctor() {
   fi
 
   if [[ "$(uname -s)" == "Darwin" ]]; then
-    if [[ -f "$HOME/Library/LaunchAgents/dev.codexremote.server.plist" && -f "$HOME/Library/LaunchAgents/dev.codexremote.web.plist" ]]; then
+    if [[ -f "$HOME/Library/LaunchAgents/dev.findeck.server.plist" && -f "$HOME/Library/LaunchAgents/dev.findeck.web.plist" ]]; then
       echo "[ok] launchd plists present"
     else
-      echo "[warn] launchd plists missing; `./scripts/codexremote.sh up` will install them"
+      echo "[warn] launchd plists missing; `./scripts/findeck.sh up` will install them"
     fi
 
     if [[ -d "$LOG_DIR" ]]; then
@@ -244,9 +250,9 @@ run_doctor() {
 
   echo
   if [[ "$issues" -eq 0 ]]; then
-    echo "[codexremote] Doctor checks passed."
+    echo "[findeck] Doctor checks passed."
   else
-    echo "[codexremote] Doctor found setup issues."
+    echo "[findeck] Doctor found setup issues."
     return 1
   fi
 }
@@ -257,11 +263,11 @@ case "$1" in
   up)
     require_darwin
     ensure_env_loaded
-    : "${CODEXREMOTE_PASSWORD:?Set CODEXREMOTE_PASSWORD or provide it in .env.local}"
+    : "${FINDECK_PASSWORD:?Set FINDECK_PASSWORD or provide it in .env.local}"
     ensure_builds
     "$SCRIPT_DIR/install-launchd.sh"
-    warn "Local stack is starting. Use ./scripts/codexremote.sh status to inspect it."
-    warn "Need a pairing code? Run ./scripts/codexremote.sh pair after the server is ready."
+    warn "Local stack is starting. Use ./scripts/findeck.sh status to inspect it."
+    warn "Need a pairing code? Run ./scripts/findeck.sh pair after the server is ready."
     ;;
   pair)
     ensure_env_loaded
@@ -269,15 +275,15 @@ case "$1" in
     ;;
   status)
     require_darwin
-    "$SCRIPT_DIR/codexremotectl.sh" status
+    "$SCRIPT_DIR/findeckctl.sh" status
     ;;
   logs)
     require_darwin
-    "$SCRIPT_DIR/codexremotectl.sh" logs
+    "$SCRIPT_DIR/findeckctl.sh" logs
     ;;
   restart)
     require_darwin
-    "$SCRIPT_DIR/codexremotectl.sh" restart
+    "$SCRIPT_DIR/findeckctl.sh" restart
     ;;
   web)
     if ! open_url "http://127.0.0.1:31817"; then

@@ -229,13 +229,13 @@ export function AppShellClient({ children }: { children: ReactNode }) {
     syncProjectFromLocation();
     window.addEventListener("popstate", syncProjectFromLocation);
     window.addEventListener(
-      "codexremote-project-selected",
+      "findeck-project-selected",
       handleProjectSelected as EventListener,
     );
     return () => {
       window.removeEventListener("popstate", syncProjectFromLocation);
       window.removeEventListener(
-        "codexremote-project-selected",
+        "findeck-project-selected",
         handleProjectSelected as EventListener,
       );
     };
@@ -312,7 +312,7 @@ export function AppShellClient({ children }: { children: ReactNode }) {
   function selectProject(value: string) {
     setSelectedProject(value);
     window.dispatchEvent(
-      new CustomEvent("codexremote-project-selected", { detail: value }),
+      new CustomEvent("findeck-project-selected", { detail: value }),
     );
   }
 
@@ -333,8 +333,8 @@ export function AppShellClient({ children }: { children: ReactNode }) {
       <div className="desktop-shell-inner">
         <aside className="desktop-sidebar">
           <div className="desktop-sidebar-brand">
-            <div className="desktop-sidebar-eyebrow">Precision Console</div>
-            <h1>CodexRemote 本地控制台</h1>
+            <div className="desktop-sidebar-eyebrow">Console</div>
+            <h1>findeck 本地控制台</h1>
             <p className="desktop-sidebar-copy">
               把当前项目、草稿目录与最近线程收成一个可操作的远程工作台。
             </p>

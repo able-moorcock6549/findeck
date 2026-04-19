@@ -21,7 +21,7 @@ import { getDb, initDb } from "../db.js";
 import { buildApp } from "../app.js";
 import { cleanTables, MockCodexAdapter } from "./helpers.js";
 
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"]!;
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"]!;
 const ARTIFACTS_DIR = path.join(DATA_ROOT, "artifacts");
 
 /** Remove all files under the artifacts directory so tests are isolated. */

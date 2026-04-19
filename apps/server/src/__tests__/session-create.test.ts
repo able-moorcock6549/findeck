@@ -53,7 +53,7 @@ describe("session creation and project browsing", () => {
       url: "/api/hosts/local/sessions",
       headers: authHeader(token),
       payload: {
-        cwd: "/workspace/CodexRemote",
+        cwd: "/workspace/findeck",
         prompt: "你不用回复，测试内容3",
       },
     });
@@ -62,7 +62,7 @@ describe("session creation and project browsing", () => {
     expect(Date.now() - startedAt).toBeGreaterThanOrEqual(200);
     const body = res.json();
     const detail = await adapter.getSessionDetail(body.sessionId);
-    expect(detail?.cwd).toBe("/workspace/CodexRemote");
+    expect(detail?.cwd).toBe("/workspace/findeck");
   });
 
   it("creates a new empty session shell when prompt is omitted", async () => {
@@ -92,7 +92,7 @@ describe("session creation and project browsing", () => {
       url: "/api/hosts/local/sessions",
       headers: authHeader(token),
       payload: {
-        cwd: "/workspace/CodexRemote",
+        cwd: "/workspace/findeck",
       },
     });
 
@@ -121,7 +121,7 @@ describe("session creation and project browsing", () => {
       url: "/api/hosts/local/sessions",
       headers: authHeader(token),
       payload: {
-        cwd: "/workspace/CodexRemote",
+        cwd: "/workspace/findeck",
       },
     });
 
@@ -129,7 +129,7 @@ describe("session creation and project browsing", () => {
     expect(Date.now() - startedAt).toBeGreaterThanOrEqual(200);
     const body = res.json();
     const detail = await adapter.getSessionDetail(body.sessionId);
-    expect(detail?.cwd).toBe("/workspace/CodexRemote");
+    expect(detail?.cwd).toBe("/workspace/findeck");
   });
 
   it("rejects invalid session creation input", async () => {
@@ -152,7 +152,7 @@ describe("session creation and project browsing", () => {
   it("lists project directories under the host home root", async () => {
     const { app } = await createTestApp();
     const token = await loginHelper(app);
-    const tempDir = path.join(homedir(), "codexremote-project-browser-test");
+    const tempDir = path.join(homedir(), "findeck-project-browser-test");
     const childDir = path.join(tempDir, "demo-project");
 
     await mkdir(childDir, { recursive: true });
@@ -183,7 +183,7 @@ describe("session creation and project browsing", () => {
   it("includes dot-prefixed directories in project browsing", async () => {
     const { app } = await createTestApp();
     const token = await loginHelper(app);
-    const tempDir = path.join(homedir(), "codexremote-project-browser-dot-test");
+    const tempDir = path.join(homedir(), "findeck-project-browser-dot-test");
     const childDir = path.join(tempDir, ".claude");
 
     await mkdir(childDir, { recursive: true });
@@ -213,7 +213,7 @@ describe("session creation and project browsing", () => {
   it("allows renaming a session title and reflects it in the session list", async () => {
     const adapter = new MockCodexAdapter();
     adapter.addSession("rename-session", {
-      cwd: "/workspace/CodexRemote",
+      cwd: "/workspace/findeck",
       title: "旧标题",
     });
     const { app } = await createTestApp(adapter);

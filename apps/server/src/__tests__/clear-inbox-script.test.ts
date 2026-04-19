@@ -10,9 +10,9 @@ import { createInboxLinkItem } from "../inbox/store.js";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..", "..", "..", "..");
 const SCRIPT_PATH = path.join(REPO_ROOT, "scripts", "clear-inbox.sh");
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"] ?? "data";
-const STAGING_ROOT = process.env["CODEXREMOTE_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
-const DB_PATH = path.join(DATA_ROOT, "codexremote.db");
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"] ?? "data";
+const STAGING_ROOT = process.env["FINDECK_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
+const DB_PATH = path.join(DATA_ROOT, "findeck.db");
 
 describe("clear-inbox.sh", () => {
   beforeEach(() => {

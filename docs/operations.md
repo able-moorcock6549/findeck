@@ -4,21 +4,21 @@
 
 Copy `.env.example` to `.env.local` and set:
 
-- `CODEXREMOTE_PASSWORD`: required
+- `FINDECK_PASSWORD`: required
 - `HOST`: optional, defaults to `0.0.0.0`
 - `PORT`: optional, defaults to `31807`
-- `CODEXREMOTE_API_URL`: web runtime target, defaults to `http://127.0.0.1:31807`
+- `FINDECK_API_URL`: web runtime target, defaults to `http://127.0.0.1:31807`
 
 ## Local startup
 
 ```bash
 npm install
-npm run codexremote -- doctor
-npm run codexremote -- up
+npm run findeck -- doctor
+npm run findeck -- up
 ```
 
 The unified helper will build missing production artifacts before installing or refreshing the local launchd services on macOS.
-If you need to pair a phone, run `npm run codexremote -- pair` after the local server is up to print a fresh one-time pairing code.
+If you need to pair a phone, run `npm run findeck -- pair` after the local server is up to print a fresh one-time pairing code.
 
 Pairing contract:
 
@@ -29,15 +29,15 @@ Pairing contract:
 Development:
 
 ```bash
-npm run dev --workspace @codexremote/server
-npm run dev --workspace @codexremote/web -- --port 31817
+npm run dev --workspace @findeck/server
+npm run dev --workspace @findeck/web -- --port 31817
 ```
 
 Production-style local run:
 
 ```bash
-./scripts/codexremote-server.sh
-./scripts/codexremote-web.sh
+./scripts/findeck-server.sh
+./scripts/findeck-web.sh
 ```
 
 ## Unified Control
@@ -45,7 +45,7 @@ Production-style local run:
 The repo-local operator entrypoint is:
 
 ```bash
-npm run codexremote -- <command>
+npm run findeck -- <command>
 ```
 
 Supported commands:
@@ -61,10 +61,10 @@ Supported commands:
 Examples:
 
 ```bash
-npm run codexremote -- status
-npm run codexremote -- logs
-npm run codexremote -- web
-npm run codexremote -- pair
+npm run findeck -- status
+npm run findeck -- logs
+npm run findeck -- web
+npm run findeck -- pair
 ```
 
 ## launchd
@@ -72,20 +72,20 @@ npm run codexremote -- pair
 Install launch agents:
 
 ```bash
-npm run codexremote -- up
+npm run findeck -- up
 ```
 
 Inspect services:
 
 ```bash
-npm run codexremote -- status
-npm run codexremote -- logs
+npm run findeck -- status
+npm run findeck -- logs
 ```
 
 launchd launchers and logs live under:
 
-- `~/Library/Application Support/CodexRemote/launchd/`
-- `~/Library/Logs/CodexRemote/`
+- `~/Library/Application Support/findeck/launchd/`
+- `~/Library/Logs/findeck/`
 
 This avoids macOS permission issues caused by pointing launchd directly at scripts and logs inside the repository tree.
 

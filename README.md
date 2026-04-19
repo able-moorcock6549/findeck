@@ -23,10 +23,10 @@ English:
 - Server 构建和测试通过
 - Web 构建和测试通过
 - Android Debug APK 可正常编译
-- 本地运维已收敛到 `npm run codexremote -- doctor|up|pair|status|logs|restart|web`
-- 可通过 `npm run codexremote -- pair` 在本机生成一次性配对码，供 Android 首次接入使用
+- 本地运维已收敛到 `npm run findeck -- doctor|up|pair|status|logs|restart|web`
+- 可通过 `npm run findeck -- pair` 在本机生成一次性配对码，供 Android 首次接入使用
 - Android 已支持可信主机自动重连、归档会话恢复、轻量 smart composer、设置页运行默认值与更完整的前台反馈
-- Web 与 Android 的首屏入口、项目导航和会话工作区已按 `Precision Console` 方向统一收口
+- Web 与 Android 的首屏入口、项目导航和会话工作区已按 `Console` 方向统一收口
 - Android 会话列表支持项目文件夹隐藏与自定义拖拽排序
 - Web 与 Android 会话详情都已支持更明确的恢复态语义，弱网或后台恢复时会尽量补齐而不是直接报错
 - Android 会话详情已升级为更完整的原生移动控制台，支持流式回复、历史折叠、附件队列、运行参数控制与仓库操作入口
@@ -35,16 +35,16 @@ English:
 - Android 端支持在应用内修改服务密码，并在服务端重启后自动重新对齐连接
 - 继续已有会话时，服务端会先恢复 thread 再启动 turn，避免旧会话落回只读权限
 - Inbox 已改为 staging 模式，远端只落盘到 `data/submissions/`
-- launchd 已改为通过 `~/Library/Application Support/CodexRemote/launchd/` 下的 launcher 启动，避免直接依赖仓库目录权限
+- launchd 已改为通过 `~/Library/Application Support/findeck/launchd/` 下的 launcher 启动，避免直接依赖仓库目录权限
 
 English:
 - Server builds and tests are passing
 - Web builds and tests are passing
 - Android debug APK builds successfully
-- Local operator flows are now unified under `npm run codexremote -- doctor|up|pair|status|logs|restart|web`
-- `npm run codexremote -- pair` prints a one-time pairing code for Android first-time setup
+- Local operator flows are now unified under `npm run findeck -- doctor|up|pair|status|logs|restart|web`
+- `npm run findeck -- pair` prints a one-time pairing code for Android first-time setup
 - Android now supports trusted-host reconnect, archived-session restore, a lightweight smart composer, runtime defaults in settings, and clearer foreground feedback
-- Web and Android first-use surfaces, project navigation, and session workspaces now follow the `Precision Console` direction more consistently
+- Web and Android first-use surfaces, project navigation, and session workspaces now follow the `Console` direction more consistently
 - Android session lists now support hiding project folders and custom drag reordering
 - Web and Android session detail now treat degraded transport as a recovery flow, aiming to catch up instead of failing loudly
 - Android session detail is now a fuller native mobile console with streaming replies, folded history, attachment queueing, runtime controls, and repo action entry points
@@ -53,7 +53,7 @@ English:
 - Android can now change the service password in-app and automatically re-align the connection after the server restarts
 - Resumed sessions now restore the thread before starting a turn so existing sessions do not fall back to read-only permissions
 - Inbox now uses a staging model and stores submissions under `data/submissions/`
-- launchd now starts from launcher scripts under `~/Library/Application Support/CodexRemote/launchd/` instead of relying directly on the repo path
+- launchd now starts from launcher scripts under `~/Library/Application Support/findeck/launchd/` instead of relying directly on the repo path
 
 ## Repository Layout / 仓库结构
 
@@ -66,9 +66,9 @@ packages/
   shared/   Shared contracts and schemas
   sdk/      Reserved for future typed SDK work
 scripts/
-  codexremote.sh     Unified local operator entrypoint
+  findeck.sh     Unified local operator entrypoint
   install-launchd.sh  Install local macOS launch agents
-  codexremotectl.sh   Inspect and restart launchd services
+  findeckctl.sh   Inspect and restart launchd services
   clear-inbox.sh      Remove inbox records and stored staging files
 infra/
   launchd/  launchd templates generated at install time
@@ -85,20 +85,20 @@ npm install
 cp .env.example .env.local
 ```
 
-中文：在 `.env.local` 中设置强密码 `CODEXREMOTE_PASSWORD`，然后执行：  
-English: Set a strong `CODEXREMOTE_PASSWORD` in `.env.local`, then run:
+中文：在 `.env.local` 中设置强密码 `FINDECK_PASSWORD`，然后执行：  
+English: Set a strong `FINDECK_PASSWORD` in `.env.local`, then run:
 
 ```bash
-npm run codexremote -- doctor
-npm run codexremote -- up
+npm run findeck -- doctor
+npm run findeck -- up
 ```
 
 中文：本地开发时也可以继续直接运行 workspace dev 命令。
 English: For active development you can still run the workspace dev servers directly.
 
 ```bash
-npm run dev --workspace @codexremote/server
-npm run dev --workspace @codexremote/web -- --port 31817
+npm run dev --workspace @findeck/server
+npm run dev --workspace @findeck/web -- --port 31817
 ```
 
 Android:

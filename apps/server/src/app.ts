@@ -18,7 +18,7 @@ import { RunManager } from "./runs/manager.js";
 import { MAX_UPLOAD_BYTES, repairArtifactConsistency } from "./artifacts/store.js";
 import { requireAuth } from "./auth/middleware.js";
 import { initDb } from "./db.js";
-import { JSON_BODY_LIMIT_BYTES } from "@codexremote/shared";
+import { JSON_BODY_LIMIT_BYTES } from "@findeck/shared";
 import {
   REQUEST_TIMEOUT_MS,
   CONNECTION_TIMEOUT_MS,

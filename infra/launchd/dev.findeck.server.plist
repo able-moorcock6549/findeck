@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>dev.codexremote.server</string>
+  <string>dev.findeck.server</string>
 
   <key>ProgramArguments</key>
   <array>
@@ -13,10 +13,10 @@
 
   <key>EnvironmentVariables</key>
   <dict>
-    <key>CODEXREMOTE_ENV_FILE</key>
+    <key>FINDECK_ENV_FILE</key>
     <string>__ENV_FILE__</string>
-    <key>CODEXREMOTE_PASSWORD</key>
-    <string>__CODEXREMOTE_PASSWORD__</string>
+    <key>FINDECK_PASSWORD</key>
+    <string>__FINDECK_PASSWORD__</string>
     <key>HOST</key>
     <string>__HOST__</string>
     <key>NODE_BIN</key>

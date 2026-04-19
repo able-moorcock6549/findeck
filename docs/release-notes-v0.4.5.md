@@ -2,7 +2,7 @@
 
 ## Summary
 
-`v0.4.5` closes the current Paseo comparison execution plan for CodexRemote.
+`v0.4.5` closes the current Paseo comparison execution plan for findeck.
 
 This release focuses on making session switching, session detail, and long-history handling feel lighter and more deliberate across Web and Android, while also tightening a few mobile-detail ergonomics discovered during final testing.
 
@@ -32,19 +32,19 @@ This release focuses on making session switching, session detail, and long-histo
 
 ## Validation
 
-- `npm run build --workspace @codexremote/shared`
-- `npm run build --workspace @codexremote/server`
-- `npm run typecheck --workspace @codexremote/web`
-- `npm run build --workspace @codexremote/web`
+- `npm run build --workspace @findeck/shared`
+- `npm run build --workspace @findeck/server`
+- `npm run typecheck --workspace @findeck/web`
+- `npm run build --workspace @findeck/web`
 - `cd apps/android && ./gradlew :app:compileDebugKotlin`
 - `cd apps/android && ./gradlew :app:assembleDebug`
 
 ## Release Docs
 
-- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/paseo-gap-improvement-plan.md)
-- [docs/session-transition-phase-summary.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-phase-summary.md)
-- [docs/session-transition-release-summary.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-release-summary.md)
-- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/session-transition-acceptance-checklist.md)
+- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/findeck/docs/paseo-gap-improvement-plan.md)
+- [docs/session-transition-phase-summary.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-phase-summary.md)
+- [docs/session-transition-release-summary.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-release-summary.md)
+- [docs/session-transition-acceptance-checklist.md](/Users/fainal/Documents/GitHub/findeck/docs/session-transition-acceptance-checklist.md)
 
 ## Known Follow-Up
 
@@ -54,4 +54,4 @@ This release focuses on making session switching, session detail, and long-histo
 
 ## Delivery Artifact
 
-- Dated APK output: `YYYY-MM-DD_CodexRemote_v0.4.5.apk`
+- Dated APK output: `YYYY-MM-DD_findeck_v0.4.5.apk`

@@ -187,7 +187,7 @@ describe("gracefulShutdown", () => {
 describe("SHUTDOWN_TIMEOUT_MS", () => {
   it("defaults to 30 seconds", () => {
     // The module reads the env at import time.  Our test setup does not
-    // set CODEXREMOTE_SHUTDOWN_TIMEOUT_MS, so it should be the default.
+    // set FINDECK_SHUTDOWN_TIMEOUT_MS, so it should be the default.
     expect(SHUTDOWN_TIMEOUT_MS).toBe(30_000);
   });
 });

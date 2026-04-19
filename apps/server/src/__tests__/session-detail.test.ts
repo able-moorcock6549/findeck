@@ -7,7 +7,7 @@ import {
   createTestApp,
   loginHelper,
 } from "./helpers.js";
-import { SessionDetailResponse } from "@codexremote/shared";
+import { SessionDetailResponse } from "@findeck/shared";
 
 describe("session detail route", () => {
   let app: FastifyInstance | null = null;
@@ -21,7 +21,7 @@ describe("session detail route", () => {
   it("returns canonical session history with reasoning and final assistant messages", async () => {
     const adapter = new MockCodexAdapter();
     adapter.addSession("detail-session-id", {
-      cwd: "/workspace/CodexRemote",
+      cwd: "/workspace/findeck",
       title: "会话详情",
       lastPreview: "最终答案放在这里。",
     });

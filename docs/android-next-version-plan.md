@@ -2,9 +2,9 @@
 
 ## 目标
 
-基于当前 `CodexRemote` Android 客户端与 `remodex` 的对比，确定下一版本的产品方向、技术边界、实施顺序与验收标准。
+基于当前 `findeck` Android 客户端与 `remodex` 的对比，确定下一版本的产品方向、技术边界、实施顺序与验收标准。
 
-这份规划只对标 `remodex` 的交互质量和体验闭环，不照搬其 iPhone + relay + trusted reconnect 架构。`CodexRemote` 仍保持当前后端中心模型：
+这份规划只对标 `remodex` 的交互质量和体验闭环，不照搬其 iPhone + relay + trusted reconnect 架构。`findeck` 仍保持当前后端中心模型：
 
 - `apps/server` 继续作为状态源
 - Android 继续基于 REST + SSE
@@ -252,8 +252,8 @@ Android 改动：
 重点文件：
 
 - `apps/android/app/src/main/res/values/strings.xml`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/...`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailHelpers.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/...`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailHelpers.kt`
 
 验收标准：
 
@@ -276,10 +276,10 @@ Android 改动：
 
 重点文件：
 
-- `apps/android/app/src/main/java/dev/codexremote/android/MainActivity.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailViewModel.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/data/network/ApiClient.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/MainActivity.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailViewModel.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/data/network/ApiClient.kt`
 
 验收标准：
 
@@ -310,9 +310,9 @@ Android 改动：
 重点文件：
 
 - `apps/android/app/src/main/AndroidManifest.xml`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/ComposerBar.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailViewModel.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/ComposerBar.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailViewModel.kt`
 
 验收标准：
 
@@ -337,9 +337,9 @@ Android 改动：
 
 重点文件：
 
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/splash/SplashScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/MessageBubbles.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/splash/SplashScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/MessageBubbles.kt`
 
 验收标准：
 

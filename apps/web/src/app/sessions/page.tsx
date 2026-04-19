@@ -530,14 +530,14 @@ export default function SessionsPage() {
     window.addEventListener("popstate", syncProjectFromLocation);
     window.addEventListener("focus", handleWindowFocus);
     window.addEventListener(
-      "codexremote-project-selected",
+      "findeck-project-selected",
       handleProjectSelected as EventListener,
     );
     return () => {
       window.removeEventListener("popstate", syncProjectFromLocation);
       window.removeEventListener("focus", handleWindowFocus);
       window.removeEventListener(
-        "codexremote-project-selected",
+        "findeck-project-selected",
         handleProjectSelected as EventListener,
       );
     };
@@ -641,7 +641,7 @@ export default function SessionsPage() {
           <aside className="sessions-project-rail panel" aria-label="项目导航">
             <div className="sessions-project-rail-header">
               <div>
-                <div className="sessions-sidebar-eyebrow">Precision Console</div>
+                <div className="sessions-sidebar-eyebrow">Console</div>
                 <h2>精选项目</h2>
                 <div className="sessions-project-rail-copy">
                   先锁定工作目录，再进入线程；草稿目录和最近活跃项目都会被抬到前面。
@@ -717,7 +717,7 @@ export default function SessionsPage() {
                               const value = group.path ?? "__ungrouped__";
                               setProjectParam(value);
                               window.dispatchEvent(
-                                new CustomEvent("codexremote-project-selected", {
+                                new CustomEvent("findeck-project-selected", {
                                   detail: value,
                                 }),
                               );
@@ -765,7 +765,7 @@ export default function SessionsPage() {
             {loading && sessions.length === 0 ? (
               <div className="empty-state">
                 <div className="spinner" />
-                <div className="empty-state-text">正在重建 Precision Console</div>
+                <div className="empty-state-text">正在重建 Console</div>
                 <div className="empty-state-sub">
                   会同步当前项目、草稿目录和最近活跃线程，稍后把工作区恢复到可进入状态。
                 </div>

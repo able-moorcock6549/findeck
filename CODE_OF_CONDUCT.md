@@ -2,8 +2,8 @@
 
 ## Our Commitment / 我们的承诺
 
-中文：为了让 CodexRemote 社区对所有人都更友好、更安全，我们承诺营造一个尊重、包容、建设性的协作环境。  
-English: In the interest of fostering an open and welcoming community, we are committed to making participation in CodexRemote respectful, inclusive, and constructive for everyone.
+中文：为了让 findeck 社区对所有人都更友好、更安全，我们承诺营造一个尊重、包容、建设性的协作环境。  
+English: In the interest of fostering an open and welcoming community, we are committed to making participation in findeck respectful, inclusive, and constructive for everyone.
 
 ## Expected Behavior / 期望行为
 

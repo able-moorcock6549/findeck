@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-DATA_DIR="${CODEXREMOTE_DATA_DIR:-$REPO_ROOT/data}"
-DB_PATH="$DATA_DIR/codexremote.db"
+DATA_DIR="${FINDECK_DATA_DIR:-$REPO_ROOT/data}"
+DB_PATH="$DATA_DIR/findeck.db"
 
 DRY_RUN=0
 MATCH_ALL=0

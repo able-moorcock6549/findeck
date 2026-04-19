@@ -22,8 +22,8 @@ describe("Composer UX APIs", () => {
   beforeEach(async () => {
     cleanTables();
     originalHome = process.env.HOME;
-    projectRoot = mkdtempSync(path.join(tmpdir(), "codexremote-files-"));
-    skillsHomeRoot = mkdtempSync(path.join(tmpdir(), "codexremote-home-"));
+    projectRoot = mkdtempSync(path.join(tmpdir(), "findeck-files-"));
+    skillsHomeRoot = mkdtempSync(path.join(tmpdir(), "findeck-home-"));
 
     mkdirSync(path.join(projectRoot, "src", "nested"), { recursive: true });
     writeFileSync(path.join(projectRoot, "README.md"), "# Example\n", "utf8");

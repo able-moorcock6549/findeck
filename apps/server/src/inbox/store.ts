@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { InboxItem } from "@codexremote/shared";
+import type { InboxItem } from "@findeck/shared";
 import { getDb } from "../db.js";
 import { ensureHostRow } from "../sessions/ensure.js";
 import {
@@ -18,8 +18,8 @@ import {
   writeSubmissionBundle,
 } from "./submission.js";
 
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"] ?? "data";
-const STAGING_ROOT = process.env["CODEXREMOTE_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"] ?? "data";
+const STAGING_ROOT = process.env["FINDECK_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
 
 function hostStagingDir(hostId: string): string {
   return path.join(STAGING_ROOT, hostId);
@@ -123,7 +123,7 @@ export async function createInboxLinkItem(opts: {
     submissionId,
     submittedAt: createdAt,
     client: {
-      name: "CodexRemote",
+      name: "findeck",
       platform: opts.source ?? "unknown",
     },
     attachments: [],
@@ -181,7 +181,7 @@ export async function createInboxLinkItem(opts: {
     submissionPath,
     submissionId,
     stagingDir: itemDir,
-    contract: "codexremote_v1",
+    contract: "findeck_v1",
     captureSessions: [{ session_id: id, file_count: 0 }],
     retryAttempts: [{ attempt: 1, status: "completed" }],
     retryPolicy: {
@@ -220,7 +220,7 @@ export async function createInboxFileItem(opts: {
     submissionId,
     submittedAt: createdAt,
     client: {
-      name: "CodexRemote",
+      name: "findeck",
       platform: opts.source ?? "unknown",
     },
     attachments: [
@@ -236,7 +236,7 @@ export async function createInboxFileItem(opts: {
     payload: {
       title: opts.originalName,
       kind: "file",
-      sourceLocator: `codexremote://submission/${id}`,
+      sourceLocator: `findeck://submission/${id}`,
       itemId: id,
     },
     captureSessions: [{ session_id: id, file_count: 1 }],
@@ -287,7 +287,7 @@ export async function createInboxFileItem(opts: {
     submissionPath,
     submissionId,
     stagingDir: itemDir,
-    contract: "codexremote_v1",
+    contract: "findeck_v1",
     captureSessions: [{ session_id: id, file_count: 1 }],
     retryAttempts: [{ attempt: 1, status: "completed" }],
     retryPolicy: {
@@ -347,7 +347,7 @@ export async function createInboxFilesItem(opts: {
     submissionId,
     submittedAt: createdAt,
     client: {
-      name: "CodexRemote",
+      name: "findeck",
       platform: opts.source ?? "unknown",
     },
     attachments,
@@ -355,7 +355,7 @@ export async function createInboxFilesItem(opts: {
     payload: {
       title: displayName,
       kind: "file",
-      sourceLocator: `codexremote://submission/${id}`,
+      sourceLocator: `findeck://submission/${id}`,
       itemId: id,
     },
     captureSessions: [{ session_id: id, file_count: opts.files.length }],
@@ -406,7 +406,7 @@ export async function createInboxFilesItem(opts: {
     submissionPath,
     submissionId,
     stagingDir: itemDir,
-    contract: "codexremote_v1",
+    contract: "findeck_v1",
     captureSessions: [{ session_id: id, file_count: opts.files.length }],
     retryAttempts: [{ attempt: 1, status: "completed" }],
     retryPolicy: {

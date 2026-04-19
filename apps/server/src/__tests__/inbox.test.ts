@@ -6,8 +6,8 @@ import { closeDb } from "../db.js";
 import { listInboxItems } from "../inbox/store.js";
 import { writeSubmissionBundle } from "../inbox/submission.js";
 
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"] ?? "data";
-const STAGING_ROOT = process.env["CODEXREMOTE_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"] ?? "data";
+const STAGING_ROOT = process.env["FINDECK_STAGING_DIR"] ?? path.join(DATA_ROOT, "submissions");
 
 function buildMultipartFilesPayload(
   boundary: string,
@@ -78,13 +78,13 @@ describe("inbox routes", () => {
     expect(body.url).toBe("https://example.com/article");
     expect(body.title).toBe("Example");
     expect(body.source).toBe("android");
-    expect(body.contract).toBe("codexremote_v1");
+    expect(body.contract).toBe("findeck_v1");
     expect(body.submissionId).toBe(body.id);
     expect(body.stagingDir).toContain("/submissions/local/");
     expect(body.submissionPath).toContain("/submission.json");
     expect(fs.existsSync(body.submissionPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(body.submissionPath, "utf-8"));
-    expect(manifest.contract).toBe("codexremote_v1");
+    expect(manifest.contract).toBe("findeck_v1");
     expect(manifest.payload.source_locator).toBe("https://example.com/article");
     expect(manifest.capture_sessions[0].file_count).toBe(0);
   });
@@ -126,7 +126,7 @@ describe("inbox routes", () => {
     expect(body.submissionPath).toContain("/submission.json");
     expect(fs.existsSync(body.submissionPath)).toBe(true);
     const manifest = JSON.parse(fs.readFileSync(body.submissionPath, "utf-8"));
-    expect(manifest.contract).toBe("codexremote_v1");
+    expect(manifest.contract).toBe("findeck_v1");
     expect(manifest.attachments).toEqual([
       { path: "attachments/note.txt", kind: "text" },
     ]);
@@ -181,7 +181,7 @@ describe("inbox routes", () => {
     expect(body.items[0].url).toBe("https://example.com/one");
     expect(body.items[0].stagingDir).toContain("/submissions/local/");
     expect(body.items[0].submissionPath).toContain("/submission.json");
-    expect(body.items[0].contract).toBe("codexremote_v1");
+    expect(body.items[0].contract).toBe("findeck_v1");
   });
 
   it("writes a submission bundle with multi-attachment and retry metadata", async () => {
@@ -197,7 +197,7 @@ describe("inbox routes", () => {
       payload: {
         title: "Remote Session Capture",
         kind: "note",
-        sourceLocator: "codexremote://submission/manual-multi",
+        sourceLocator: "findeck://submission/manual-multi",
         itemId: "manual-multi",
       },
       attachments: [
@@ -216,7 +216,7 @@ describe("inbox routes", () => {
     });
 
     const manifest = JSON.parse(fs.readFileSync(submissionPath, "utf-8"));
-    expect(manifest.contract).toBe("codexremote_v1");
+    expect(manifest.contract).toBe("findeck_v1");
     expect(manifest.attachments).toEqual([
       { path: "attachments/session-a/clip.txt", kind: "text" },
       { source_path: "attachments/session-a/page.md", kind: "markdown" },
@@ -238,16 +238,16 @@ describe("inbox routes", () => {
         filename: "remote-submission/submission.json",
         content: Buffer.from(
           JSON.stringify({
-            contract: "codexremote_review_bundle_v1",
+            contract: "findeck_review_bundle_v1",
             submission_id: "remote-bundle-1",
             submitted_at: "2026-04-06T00:00:00.000Z",
-            client: { name: "CodexRemote", platform: "android" },
+            client: { name: "findeck", platform: "android" },
             attachments: [{ path: "attachments/session-a/clip.txt", kind: "text" }],
             capture_text: "# Remote Capture",
             payload: {
               title: "Bundle Import",
               kind: "note",
-              source_locator: "codexremote://submission/remote-bundle-1",
+              source_locator: "findeck://submission/remote-bundle-1",
             },
             capture_sessions: [{ session_id: "session-a", file_count: 1 }],
             retry_attempts: [{ attempt: 1, status: "completed" }],
@@ -300,7 +300,7 @@ describe("inbox routes", () => {
     const body = JSON.parse(res.body);
     expect(body.submissionId).toBe("remote-bundle-1");
     expect(body.stagingDir).toBe(path.join(STAGING_ROOT, "local", "remote-bundle-1"));
-    expect(body.contract).toBe("codexremote_review_bundle_v1");
+    expect(body.contract).toBe("findeck_review_bundle_v1");
     expect(body.hasReviewBundle).toBe(true);
     expect(body.hasSkillRunbook).toBe(true);
     const itemDir = path.dirname(body.submissionPath);
@@ -351,7 +351,7 @@ describe("inbox routes", () => {
     expect(body.stagingDir).toContain("/submissions/local/");
     expect(body.submissionPath).toContain("/submission.json");
     const manifest = JSON.parse(fs.readFileSync(body.submissionPath, "utf-8"));
-    expect(manifest.contract).toBe("codexremote_v1");
+    expect(manifest.contract).toBe("findeck_v1");
     expect(manifest.payload.title).toBe("2 files");
     expect(manifest.capture_sessions[0].file_count).toBe(2);
     expect(manifest.attachments).toEqual([
@@ -391,12 +391,12 @@ describe("inbox routes", () => {
 
     await writeSubmissionBundle({
       itemDir,
-      contract: "codexremote_review_bundle_v1",
+      contract: "findeck_review_bundle_v1",
       submissionId: body.id,
       payload: {
         title: "Review Roundtrip",
         kind: "link",
-        sourceLocator: "codexremote://submission/review-roundtrip",
+        sourceLocator: "findeck://submission/review-roundtrip",
         itemId: body.id,
       },
       attachments: [],
@@ -415,7 +415,7 @@ describe("inbox routes", () => {
 
     const items = listInboxItems("local");
     expect(items).toHaveLength(1);
-    expect(items[0].contract).toBe("codexremote_review_bundle_v1");
+    expect(items[0].contract).toBe("findeck_review_bundle_v1");
     expect(items[0].stagingDir).toBe(itemDir);
     expect(items[0].hasReviewBundle).toBe(true);
     expect(items[0].hasSkillRunbook).toBe(true);

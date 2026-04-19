@@ -12,7 +12,7 @@ import {
   createTestApp,
   loginHelper,
 } from "./helpers.js";
-import { RepoStatusResponse } from "@codexremote/shared";
+import { RepoStatusResponse } from "@findeck/shared";
 
 const execFileAsync = promisify(execFile);
 
@@ -103,7 +103,7 @@ describe("repo status route", () => {
   });
 
   it("returns a safe non-repo response for a plain directory", async () => {
-    const plainDir = await mkdtemp(path.join(tmpdir(), "codexremote-repo-status-"));
+    const plainDir = await mkdtemp(path.join(tmpdir(), "findeck-repo-status-"));
     tempDirs.push(plainDir);
 
     const adapter = new MockCodexAdapter();
@@ -154,7 +154,7 @@ describe("repo status route", () => {
 });
 
 async function createGitRepo(opts: { detached?: boolean; dirty?: boolean }): Promise<string> {
-  const repoDir = await mkdtemp(path.join(tmpdir(), "codexremote-git-repo-"));
+  const repoDir = await mkdtemp(path.join(tmpdir(), "findeck-git-repo-"));
   await runGit(repoDir, ["init"]);
   await runGit(repoDir, ["config", "user.name", "Codex Test"]);
   await runGit(repoDir, ["config", "user.email", "codex@example.com"]);

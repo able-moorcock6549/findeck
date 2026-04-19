@@ -10,6 +10,6 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const testDataDir = mkdtempSync(join(tmpdir(), "codexremote-test-"));
-process.env["CODEXREMOTE_DATA_DIR"] = testDataDir;
-process.env["CODEXREMOTE_PASSWORD"] = "test-password";
+const testDataDir = mkdtempSync(join(tmpdir(), "findeck-test-"));
+process.env["FINDECK_DATA_DIR"] = testDataDir;
+process.env["FINDECK_PASSWORD"] = "test-password";

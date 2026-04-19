@@ -1,7 +1,7 @@
-# @codexremote/web
+# @findeck/web
 
-中文：CodexRemote 的移动优先 Next.js Web 客户端。  
-English: Mobile-first Next.js web client for CodexRemote.
+中文：findeck 的移动优先 Next.js Web 客户端。  
+English: Mobile-first Next.js web client for findeck.
 
 ## Features / 功能
 
@@ -23,13 +23,13 @@ English:
 
 ```bash
 npm install
-npm run build --workspace @codexremote/shared
-npm run dev --workspace @codexremote/server
-npm run dev --workspace @codexremote/web -- --port 31817
+npm run build --workspace @findeck/shared
+npm run dev --workspace @findeck/server
+npm run dev --workspace @findeck/web -- --port 31817
 ```
 
-中文：Web 默认通过 `CODEXREMOTE_API_URL` 连接后端，默认值为 `http://localhost:31807`。  
-English: The web app connects to the backend through `CODEXREMOTE_API_URL`, which defaults to `http://localhost:31807`.
+中文：Web 默认通过 `FINDECK_API_URL` 连接后端，默认值为 `http://localhost:31807`。  
+English: The web app connects to the backend through `FINDECK_API_URL`, which defaults to `http://localhost:31807`.
 
 ## Scripts / 脚本
 

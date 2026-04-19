@@ -1,6 +1,6 @@
 # Architecture
 
-CodexRemote is a single-user remote control stack for a local Codex CLI host.
+findeck is a single-user remote control stack for a local Codex CLI host.
 
 ## Components
 

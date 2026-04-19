@@ -2,11 +2,11 @@
 
 ## Goal
 
-Upgrade CodexRemote from a capable engineering control surface into a more polished product experience across web and Android.
+Upgrade findeck from a capable engineering control surface into a more polished product experience across web and Android.
 
 The reference for interaction quality is `remodex` as inspected on April 15, 2026, but not its transport architecture or iOS-specific product model.
 
-CodexRemote will keep the current product foundation:
+findeck will keep the current product foundation:
 
 - `apps/server` remains the source of truth
 - `apps/web` remains a Next.js browser control surface
@@ -15,7 +15,7 @@ CodexRemote will keep the current product foundation:
 
 ## Why This Plan Exists
 
-CodexRemote already covers important workflows:
+findeck already covers important workflows:
 
 - session browsing and creation
 - live run streaming
@@ -35,7 +35,7 @@ This plan turns those observations into a strict execution sequence.
 
 ## Product Direction
 
-We want CodexRemote to feel like a calm, high-signal remote Codex cockpit:
+We want findeck to feel like a calm, high-signal remote Codex cockpit:
 
 - the first screen should establish trust and capability
 - session navigation should feel curated, not raw
@@ -45,11 +45,11 @@ We want CodexRemote to feel like a calm, high-signal remote Codex cockpit:
 
 ## Brand Direction
 
-CodexRemote will follow a brand direction called `Precision Console`.
+findeck will follow a brand direction called `Console`.
 
 This direction should guide future frontend work unless we explicitly revise the plan.
 
-### Precision Console
+### Console
 
 Desired feel:
 
@@ -220,8 +220,8 @@ Scope:
 Primary files:
 
 - `apps/web/src/app/globals.css`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/theme/Color.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/theme/Theme.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/theme/Color.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/theme/Theme.kt`
 - related shared UI components that represent app-wide states
 
 Acceptance criteria:
@@ -247,7 +247,7 @@ Primary files:
 
 - `apps/web/src/app/login/page.tsx`
 - `apps/web/src/app/page.tsx`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/login/LoginScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/login/LoginScreen.kt`
 - splash or entry-state components if needed
 
 Acceptance criteria:
@@ -274,7 +274,7 @@ Primary files:
 
 - `apps/web/src/app/app-shell-client.tsx`
 - `apps/web/src/app/sessions/page.tsx`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionListScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionListScreen.kt`
 
 Acceptance criteria:
 
@@ -299,8 +299,8 @@ Scope:
 Primary files:
 
 - `apps/web/src/app/sessions/[sessionId]/page.tsx`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/SessionDetailScreen.kt`
-- `apps/android/app/src/main/java/dev/codexremote/android/ui/sessions/MessageBubbles.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/SessionDetailScreen.kt`
+- `apps/android/app/src/main/java/dev/findeck/android/ui/sessions/MessageBubbles.kt`
 - related timeline and helper components
 
 Acceptance criteria:
@@ -474,4 +474,4 @@ This plan was informed by a direct comparison against the public `remodex` repos
 - timeline componentization
 - active-run visual feedback
 
-CodexRemote should borrow the level of polish and state design discipline, while keeping its own backend model and product identity.
+findeck should borrow the level of polish and state design discipline, while keeping its own backend model and product identity.

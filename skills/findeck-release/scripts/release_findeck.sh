@@ -19,7 +19,7 @@ NOTES_FILE=""
 
 usage() {
   cat <<'EOF'
-Usage: release_codexremote.sh [options]
+Usage: release_findeck.sh [options]
 
 Options:
   --dry-run         Print the planned actions without mutating git or GitHub
@@ -188,8 +188,8 @@ fi
 
 if [[ "${SKIP_VALIDATE}" -ne 1 ]]; then
   prepare_android_env
-  run_cmd npm run typecheck --workspace @codexremote/web
-  run_cmd npm run build --workspace @codexremote/web
+  run_cmd npm run typecheck --workspace @findeck/web
+  run_cmd npm run build --workspace @findeck/web
   if [[ "${DRY_RUN}" -eq 1 ]]; then
     printf '[dry-run] (cd apps/android && ./gradlew :app:compileDebugKotlin)\n'
   else

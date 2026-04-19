@@ -229,7 +229,7 @@ async function readJsonRpcResponse<T>(
       params: {
         protocolVersion: APP_SERVER_PROTOCOL_VERSION,
         clientInfo: {
-          name: "CodexRemote",
+          name: "findeck",
           version: "0.0.0",
         },
         capabilities: {

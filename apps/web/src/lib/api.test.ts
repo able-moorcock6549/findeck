@@ -61,7 +61,7 @@ describe("web api token flow", () => {
   });
 
   it("supports explicit clearing", () => {
-    localStorage.setItem("codexremote_token", "token-789");
+    localStorage.setItem("findeck_token", "token-789");
     clearToken();
     expect(getToken()).toBeNull();
   });

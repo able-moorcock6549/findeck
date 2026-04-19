@@ -76,7 +76,7 @@ describe("runtime helper", () => {
       params: expect.objectContaining({
         protocolVersion: "2025-06-18",
         clientInfo: {
-          name: "CodexRemote",
+          name: "findeck",
           version: "0.0.0",
         },
         capabilities: {

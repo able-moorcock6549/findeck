@@ -26,10 +26,10 @@ let createdArtifacts: Artifact[] = [];
 describe("File download routes", () => {
   beforeEach(async () => {
     cleanTables();
-    projectRoot = mkdtempSync(path.join(tmpdir(), "codexremote-download-"));
-    externalRoot = mkdtempSync(path.join(tmpdir(), "codexremote-external-"));
-    smbRoot = mkdtempSync(path.join(tmpdir(), "codexremote-smb-"));
-    process.env["CODEXREMOTE_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"] = smbRoot;
+    projectRoot = mkdtempSync(path.join(tmpdir(), "findeck-download-"));
+    externalRoot = mkdtempSync(path.join(tmpdir(), "findeck-external-"));
+    smbRoot = mkdtempSync(path.join(tmpdir(), "findeck-smb-"));
+    process.env["FINDECK_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"] = smbRoot;
 
     mkdirSync(path.join(projectRoot, "src"), { recursive: true });
     writeFileSync(path.join(projectRoot, "README.md"), "hello world\n", "utf8");
@@ -58,7 +58,7 @@ describe("File download routes", () => {
     rmSync(projectRoot, { recursive: true, force: true });
     rmSync(externalRoot, { recursive: true, force: true });
     rmSync(smbRoot, { recursive: true, force: true });
-    delete process.env["CODEXREMOTE_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"];
+    delete process.env["FINDECK_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"];
   });
 
   it("streams a cwd file inside the session root", async () => {

@@ -4,7 +4,7 @@
 
 对应计划书：
 
-- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/paseo-gap-improvement-plan.md)
+- [docs/paseo-gap-improvement-plan.md](/Users/fainal/Documents/GitHub/findeck/docs/paseo-gap-improvement-plan.md)
 
 这份清单只覆盖“会话切换体验”主线，不替代语音、文件、审批、repo 操作等其他功能线的专项验收。
 

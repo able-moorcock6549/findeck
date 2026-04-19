@@ -14,7 +14,7 @@ import {
   type FileEntry,
   type ListFilesResponse,
   type SearchFilesResponse,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import { LOCAL_HOST_ID } from "../constants.js";
 import type { CodexAdapter } from "../codex/interface.js";
 import { resolveArtifactFileForDownload } from "../artifacts/store.js";
@@ -155,7 +155,7 @@ async function resolveAllowedAbsoluteDownload(
   if (!canonicalPath) return null;
 
   const configuredRoots = (
-    process.env["CODEXREMOTE_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"] ??
+    process.env["FINDECK_ALLOWED_ABSOLUTE_DOWNLOAD_ROOTS"] ??
     path.join(homedir(), "smb")
   )
     .split(",")

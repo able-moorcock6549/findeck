@@ -16,8 +16,8 @@ describe("Session archiving", () => {
   beforeEach(async () => {
     cleanTables();
     ({ app, adapter } = await createTestApp());
-    adapter.addSession("sess-a", { title: "A", cwd: "/workspace/CodexRemote" });
-    adapter.addSession("sess-b", { title: "B", cwd: "/workspace/CodexRemote" });
+    adapter.addSession("sess-a", { title: "A", cwd: "/workspace/findeck" });
+    adapter.addSession("sess-b", { title: "B", cwd: "/workspace/findeck" });
     token = await loginHelper(app);
   });
 

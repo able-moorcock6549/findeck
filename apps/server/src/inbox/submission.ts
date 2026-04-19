@@ -67,7 +67,7 @@ export interface ImportedSubmissionManifest {
 
 function defaultClient(source?: string): Record<string, unknown> {
   return {
-    name: "CodexRemote",
+    name: "findeck",
     platform: source?.trim() || "unknown",
   };
 }
@@ -149,7 +149,7 @@ export function inferAttachmentKind(input: {
 export async function writeSubmissionBundle(
   opts: WriteSubmissionBundleOptions,
 ): Promise<string> {
-  const contract = opts.contract ?? (opts.reviewBundle ? "codexremote_review_bundle_v1" : "codexremote_v1");
+  const contract = opts.contract ?? (opts.reviewBundle ? "findeck_review_bundle_v1" : "findeck_v1");
   const submittedAt = opts.submittedAt ?? new Date().toISOString();
   const payload = {
     title: opts.payload.title,

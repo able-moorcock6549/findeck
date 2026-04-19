@@ -1,10 +1,10 @@
 {
-  "name": "codexremote",
+  "name": "findeck",
   "version": "0.5.0",
   "private": true,
-  "description": "Remote control system for Codex CLI",
+  "description": "Personal remote control stack for Codex CLI",
   "scripts": {
-    "codexremote": "./scripts/codexremote.sh",
+    "findeck": "./scripts/findeck.sh",
     "android:publish": "./scripts/publish-android-apk.sh",
     "android:publish:dry": "./scripts/publish-android-apk.sh --dry-run"
   },

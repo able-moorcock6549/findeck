@@ -48,14 +48,14 @@ This release closes the current `P0` batch from the Android next-phase plan:
 
 - `npm --workspace packages/shared run build`
 - `npm --workspace apps/server run build`
-- `cd apps/android && ./gradlew :app:testDebugUnitTest --tests "dev.codexremote.android.ui.sessions.SessionVoiceInputControllerTest" --tests "dev.codexremote.android.ui.sessions.SessionDetailHelpersTest"`
+- `cd apps/android && ./gradlew :app:testDebugUnitTest --tests "dev.findeck.android.ui.sessions.SessionVoiceInputControllerTest" --tests "dev.findeck.android.ui.sessions.SessionDetailHelpersTest"`
 - `cd apps/android && ./gradlew :app:compileDebugKotlin`
 - `cd apps/android && ./gradlew :app:assembleDebug`
 
 ## Related Docs
 
-- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/CodexRemote/docs/android-mobile-next-phase-plan-2026-04-18.md)
+- [docs/android-mobile-next-phase-plan-2026-04-18.md](/Users/fainal/Documents/GitHub/findeck/docs/android-mobile-next-phase-plan-2026-04-18.md)
 
 ## Delivery Artifact
 
-- Dated APK output: `2026-04-18_CodexRemote_v0.4.11.apk`
+- Dated APK output: `2026-04-18_findeck_v0.4.11.apk`

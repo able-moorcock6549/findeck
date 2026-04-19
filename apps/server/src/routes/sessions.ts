@@ -28,7 +28,7 @@ import {
   type SessionSummaryResponse as SessionSummaryResponseBody,
   type SessionMessagesResponse as SessionMessagesResponseBody,
   type Session,
-} from "@codexremote/shared";
+} from "@findeck/shared";
 import type { CodexAdapter } from "../codex/index.js";
 import { LOCAL_HOST_ID } from "../constants.js";
 import { getDb } from "../db.js";
@@ -841,7 +841,7 @@ async function performRepoAction(
       if ((currentStatus.dirtyCount ?? 0) === 0 && (currentStatus.untrackedCount ?? 0) === 0) {
         throw new Error("当前没有可暂存的改动");
       }
-      const stashMessage = action.message?.trim() || `CodexRemote stash ${new Date().toISOString()}`;
+      const stashMessage = action.message?.trim() || `findeck stash ${new Date().toISOString()}`;
       await runGitCommandStrict(safeCwd, [
         "stash",
         "push",

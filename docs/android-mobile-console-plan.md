@@ -4,7 +4,7 @@
 
 Upgrade the Android app from a readable remote chat client into a stronger mobile control surface for Codex runs.
 
-The reference for interaction quality is `remodex`, but not its transport architecture. CodexRemote will keep the current backend-centered model:
+The reference for interaction quality is `remodex`, but not its transport architecture. findeck will keep the current backend-centered model:
 
 - Fastify API remains the source of truth
 - Android stays a client of REST + SSE
@@ -108,7 +108,7 @@ Acceptance criteria:
 
 Scope:
 
-- Add Git and workspace affordances that fit the current CodexRemote backend model
+- Add Git and workspace affordances that fit the current findeck backend model
 - Start with read-first controls: branch, repo state, diff summary
 - Only then consider write actions like commit or push
 

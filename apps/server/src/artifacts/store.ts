@@ -22,7 +22,7 @@ import crypto from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Artifact } from "@codexremote/shared";
+import type { Artifact } from "@findeck/shared";
 import { getDb } from "../db.js";
 import { ensureSessionRow } from "../sessions/ensure.js";
 import { MIN_FREE_DISK_BYTES } from "../config.js";
@@ -30,7 +30,7 @@ import { MIN_FREE_DISK_BYTES } from "../config.js";
 // ── Configuration ──────────────────────────────────────────────────
 
 /** Root directory for all artifact files, relative to the server cwd. */
-const DATA_ROOT = process.env["CODEXREMOTE_DATA_DIR"] ?? "data";
+const DATA_ROOT = process.env["FINDECK_DATA_DIR"] ?? "data";
 const ARTIFACTS_DIR = path.join(DATA_ROOT, "artifacts");
 
 /** Maximum upload size in bytes (50 MB per §11 security model). */

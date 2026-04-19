@@ -1,7 +1,7 @@
 # apps/server
 
-中文：CodexRemote 的 Fastify 后端。  
-English: Fastify backend for CodexRemote.
+中文：findeck 的 Fastify 后端。  
+English: Fastify backend for findeck.
 
 ## Responsibilities / 主要职责
 
@@ -29,22 +29,22 @@ English:
 
 ```bash
 npm install
-npm run build --workspace @codexremote/shared
-npm run dev --workspace @codexremote/server
+npm run build --workspace @findeck/shared
+npm run dev --workspace @findeck/server
 ```
 
 Production-style local run / 本地生产式运行:
 
 ```bash
-./scripts/codexremote-server.sh
+./scripts/findeck-server.sh
 ```
 
-中文：服务端默认读取 `.env.local`，并要求设置 `CODEXREMOTE_PASSWORD`。  
-English: The server reads `.env.local` by default and requires `CODEXREMOTE_PASSWORD`.
+中文：服务端默认读取 `.env.local`，并要求设置 `FINDECK_PASSWORD`。  
+English: The server reads `.env.local` by default and requires `FINDECK_PASSWORD`.
 
 ## Storage / 存储
 
-- SQLite database / SQLite 数据库: `data/codexremote.db`
+- SQLite database / SQLite 数据库: `data/findeck.db`
 - inbox staging directories / inbox staging 目录: `data/submissions/`
 - session artifacts / 会话附件: backend-managed local storage
 

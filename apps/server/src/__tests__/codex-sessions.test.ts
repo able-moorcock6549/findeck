@@ -26,7 +26,7 @@ describe("codex session discovery", () => {
   });
 
   it("discovers nested jsonl sessions instead of year directories", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -69,7 +69,7 @@ describe("codex session discovery", () => {
   });
 
   it("returns null for unknown session ids and detail for known ids", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -103,7 +103,7 @@ describe("codex session discovery", () => {
   });
 
   it("readSessionMeta resolves nested session files by actual codex id", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -137,7 +137,7 @@ describe("codex session discovery", () => {
   });
 
   it("deduplicates multiple rollout files for the same codex session id", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -209,7 +209,7 @@ describe("codex session discovery", () => {
   });
 
   it("aggregates messages and latest meta across multiple rollout files for one session id", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -220,7 +220,7 @@ describe("codex session discovery", () => {
         payload: {
           id: "multi-rollout-session-id",
           timestamp: "2026-04-05T09:59:00.000Z",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -250,7 +250,7 @@ describe("codex session discovery", () => {
         payload: {
           id: "multi-rollout-session-id",
           timestamp: "2026-04-06T11:59:00.000Z",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -275,7 +275,7 @@ describe("codex session discovery", () => {
 
     const meta = await readSessionMeta("multi-rollout-session-id");
     expect(meta).toMatchObject({
-      cwd: "/workspace/CodexRemote",
+      cwd: "/workspace/findeck",
       title: "第二轮问题",
       lastPreview: "第二轮回答",
       lastActivityAt: "2026-04-06T12:02:00.000Z",
@@ -311,7 +311,7 @@ describe("codex session discovery", () => {
   });
 
   it("keeps a parent session visible when subagent rollouts repeat the same thread id", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -322,7 +322,7 @@ describe("codex session discovery", () => {
         payload: {
           id: "parent-thread-id",
           timestamp: "2026-04-06T12:00:00.000Z",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
           source: "vscode",
         },
       },
@@ -351,7 +351,7 @@ describe("codex session discovery", () => {
         payload: {
           id: "parent-thread-id",
           timestamp: "2026-04-07T12:03:00.000Z",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
           source: {
             subagent: {
               thread_spawn: {
@@ -376,7 +376,7 @@ describe("codex session discovery", () => {
     expect(sessions).toEqual([
       expect.objectContaining({
         id: "parent-thread-id",
-        cwd: "/workspace/CodexRemote",
+        cwd: "/workspace/findeck",
         title: "主线程消息",
         isSubagent: false,
       }),
@@ -384,7 +384,7 @@ describe("codex session discovery", () => {
   });
 
   it("reads visible session message history from codex rollout files", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -440,7 +440,7 @@ describe("codex session discovery", () => {
   });
 
   it("prefers structured response messages over duplicate event_msg assistant output", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -450,7 +450,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "dedupe-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -496,7 +496,7 @@ describe("codex session discovery", () => {
   });
 
   it("filters the internal empty-session bootstrap prompt from message history", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -506,7 +506,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "bootstrap-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -538,7 +538,7 @@ describe("codex session discovery", () => {
   });
 
   it("uses session_index thread_name for bootstrap-only sessions", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
     const sessionIndexPath = join(base, "session_index.jsonl");
@@ -547,7 +547,7 @@ describe("codex session discovery", () => {
       sessionIndexPath,
       `${JSON.stringify({
         id: "bootstrap-session-indexed-id",
-        thread_name: "CodexRemote",
+        thread_name: "findeck",
         updated_at: "2026-04-06T12:00:03.000Z",
       })}\n`,
       "utf-8",
@@ -559,7 +559,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "bootstrap-session-indexed-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -577,11 +577,11 @@ describe("codex session discovery", () => {
     ]);
 
     const meta = await readSessionMeta("bootstrap-session-indexed-id");
-    expect(meta.title).toBe("CodexRemote");
+    expect(meta.title).toBe("findeck");
   });
 
   it("filters tmp-based sessions from the default visible list", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -591,7 +591,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "tmp-session-id",
-          cwd: "/tmp/codexremote-smoke",
+          cwd: "/tmp/findeck-smoke",
         },
       },
     ]);
@@ -602,7 +602,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "real-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
     ]);
@@ -612,7 +612,7 @@ describe("codex session discovery", () => {
   });
 
   it("filters macOS private temp folders and tmp-prefixed project names", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -644,7 +644,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "real-project-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
     ]);
@@ -654,7 +654,7 @@ describe("codex session discovery", () => {
   });
 
   it("extracts reasoning blocks as foldable history items", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -664,7 +664,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "reasoning-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -687,7 +687,7 @@ describe("codex session discovery", () => {
   });
 
   it("deduplicates assistant replies that differ only by whitespace formatting", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -697,7 +697,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "whitespace-dedupe-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -729,7 +729,7 @@ describe("codex session discovery", () => {
   });
 
   it("keeps distinct assistant replies when stable item identity differs even if text matches", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -739,7 +739,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "stable-identity-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -787,7 +787,7 @@ describe("codex session discovery", () => {
   });
 
   it("filters internal environment and permissions context from message history", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -797,7 +797,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "internal-context-filter-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -813,7 +813,7 @@ describe("codex session discovery", () => {
         type: "event_msg",
         payload: {
           type: "user_message",
-          message: "<environment_context> <cwd>/workspace/CodexRemote</cwd>",
+          message: "<environment_context> <cwd>/workspace/findeck</cwd>",
         },
       },
       {
@@ -836,7 +836,7 @@ describe("codex session discovery", () => {
   });
 
   it("shows only the user request text for attachment-injected prompts", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -846,7 +846,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "attachment-wrapper-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -873,7 +873,7 @@ describe("codex session discovery", () => {
   });
 
   it("drops truncated attachment wrapper fragments when the user request marker is missing", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -883,7 +883,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "attachment-wrapper-fragment-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
@@ -908,7 +908,7 @@ describe("codex session discovery", () => {
   });
 
   it("uses the user request text for attachment-injected session titles", async () => {
-    const base = await mkdtemp(join(tmpdir(), "codexremote-sessions-"));
+    const base = await mkdtemp(join(tmpdir(), "findeck-sessions-"));
     createdDirs.push(base);
     process.env["CODEX_STATE_DIR"] = base;
 
@@ -918,7 +918,7 @@ describe("codex session discovery", () => {
         type: "session_meta",
         payload: {
           id: "attachment-wrapper-title-session-id",
-          cwd: "/workspace/CodexRemote",
+          cwd: "/workspace/findeck",
         },
       },
       {
